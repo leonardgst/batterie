@@ -23,8 +23,8 @@ Référence : [cadrage](../00-cadrage.md), user stories US4 à US6.
 - [x] Test : toutes les partitions de `scores/` se chargent sans erreur
 
 **PR 3 — Transport et métronome** (`feat/transport`)
-- [ ] `core/transport.py` : horloge (`time.perf_counter_ns`), tempo, facteur de tempo, conversion beat → secondes, métronome
-- [ ] Test automatique : dérive de synchronisation < 5 ms sur 5 minutes simulées (US5)
+- [x] `core/transport.py` : horloge (`time.perf_counter_ns`), tempo, facteur de tempo, conversion beat → secondes, métronome
+- [x] Test automatique : dérive de synchronisation < 5 ms sur 5 minutes simulées (US5)
 
 **PR 4 — Menu, couloirs défilants, écran de fin** (`feat/score-player`)
 - [ ] Écran d'accueil : choisir un style puis une partition (titre, tempo, difficulté affichés — US4)
@@ -48,7 +48,7 @@ très bien sans (les partitions TOML suffisent à jouer un morceau en entier).
 - [ ] Tests au vert (CI Windows)
 - [ ] Documentation à jour (README, CHANGELOG, journal)
 - [ ] Testé en jouant : un morceau choisi et joué du début à la fin en suivant les touches affichées
-- [ ] Dérive de synchronisation < 5 ms sur 5 minutes (test automatique)
+- [x] Dérive de synchronisation < 5 ms sur 5 minutes (test automatique) — `tests/test_transport.py`
 - [ ] Licence de chaque partition vérifiée et documentée
 
 ## Décisions prises (liens vers les ADR)
