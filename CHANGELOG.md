@@ -5,6 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-09
+
+Phase 02 — Partitions (V2) : choisir une partition et la jouer du début à la fin en suivant les touches qui défilent.
+
 ### Added
 
 - Format de partition et chargeur (phase 02, PR 1) : `core/score.py` (grille façon tablature, symboles `-`/`x`/`X`/`g`, swing), `scores/rock/groove-de-base.toml` comme premier exemple réel.
@@ -16,6 +20,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 ### Fixed
 
 - La charleston fermée et la charleston ouverte (même position visuelle) masquaient parfois l'illumination l'une de l'autre selon l'ordre de dessin ; l'élément allumé passe maintenant toujours au premier plan (`ui/kit_view.py`).
+
+### Changed
+
+- Échap est maintenant contextuel (remonte d'un écran, met en pause, puis quitte depuis l'accueil) plutôt que de toujours fermer l'application immédiatement.
+
+### Validated
+
+- Testé en jouant par l'utilisateur : un morceau choisi et joué du début à la fin, couloirs de coups, pause/reprise et le nouveau comportement d'Échap.
 
 ## [0.1.0] - 2026-10-09
 

@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| En cours | 6 à 10 h de ton temps | — | v0.2.0 |
+| Terminée | 6 à 10 h de ton temps | 2026-10-09 | v0.2.0 |
 
 ## Objectif
 
@@ -31,7 +31,7 @@ Référence : [cadrage](../00-cadrage.md), user stories US4 à US6.
 - [x] Couloirs de coups qui défilent vers une ligne de frappe, avec la touche (US5)
 - [x] Décompte d'une mesure avant le début
 - [x] Échap met en pause ; fin du morceau → écran de résultat
-- [ ] Testé en jouant : un morceau choisi et joué du début à la fin — à toi de valider
+- [x] Testé en jouant : un morceau choisi et joué du début à la fin — validé par toi le 2026-10-09
 
 **PR 5 — Finitions V2** (`feat/score-finishing`)
 - [x] Tempo réglable, 50 % à 120 % par pas de 5 % (US6, Should mais requis par le critère de fin de la phase)
@@ -47,7 +47,7 @@ très bien sans (les partitions TOML suffisent à jouer un morceau en entier).
 
 - [x] Tests au vert (CI Windows)
 - [x] Documentation à jour (README, CHANGELOG, journal)
-- [ ] Testé en jouant : un morceau choisi et joué du début à la fin en suivant les touches affichées — à toi de valider
+- [x] Testé en jouant : un morceau choisi et joué du début à la fin en suivant les touches affichées — validé le 2026-10-09, y compris le nouveau comportement d'Échap (PR 4)
 - [x] Dérive de synchronisation < 5 ms sur 5 minutes (test automatique) — `tests/test_transport.py`
 - [x] Licence de chaque partition vérifiée et documentée — CC0-1.0, créations originales (`scores/<style>/*.toml`)
 
@@ -62,9 +62,20 @@ _Aucune pour l'instant._
 - **PR 4 — métronome visuel, pas sonore.** Le décompte et le suivi du tempo pendant la lecture sont uniquement visuels (grand chiffre puis couloirs qui défilent) ; aucun clic audio de métronome. Ajouter un son demanderait un nouvel asset et un chemin de lecture dédié (le clic n'est pas un élément du kit) ; reporté pour garder cette PR raisonnable. Possible en PR 5 ou plus tard si tu le souhaites.
 - **PR 4 — orchestration des écrans dans `app.py`, pas de `ui/scenes/`.** L'architecture du cadrage esquissait un dossier `ui/scenes/` ; avec seulement 6 écrans de logique simple (accueil, jeu libre, style, partition, lecture, résultat), un module unique reste plus lisible qu'une collection de petits fichiers. À revoir si la V3 (plusieurs écrans de calibration vision) rend ce découpage utile.
 - **PR 4 — bug trouvé et corrigé en marge.** En vérifiant visuellement le rendu, j'ai remarqué que la charleston fermée et ouverte (même position à l'écran, par choix de la PR 3) s'illuminaient bien l'une sur l'autre : l'une masquait toujours le flash de l'autre selon l'ordre de dessin, donc frapper « D » ne montrait jamais rien. Corrigé dans `ui/kit_view.py` (l'élément allumé se dessine toujours en dernier) et couvert par un test de non-régression ; ça concerne aussi le jeu libre de la phase 01.
-- **PR 2 — grooves pas encore testés en jouant.** Les 12 partitions sont validées structurellement (elles se chargent, le bon nombre de notes, aucune erreur), mais je ne peux pas les jouer moi-même pour confirmer qu'elles « sonnent » bien musicalement — pas d'oreille, et le lecteur de partition (PR 4) n'existe pas encore pour les essayer en situation. À vérifier par toi, en tant que batteur, une fois la PR 4 en place ; un groove qui ne te convient pas se corrige facilement dans son fichier `.toml`.
+- **PR 2 — grooves validés en jouant à la clôture.** Les 12 partitions, écrites sans pouvoir les entendre moi-même, ont été essayées par toi une fois le lecteur (PR 4) disponible et validées le 2026-10-09.
 - **PR 1 — précision du format laissée ouverte par le cadrage.** Le cadrage donne l'exemple `swing = 0.0 # droit, 0.66 = ternaire` sans formule précise. J'ai choisi : `swing` est directement la position (0 à 1) du contretemps dans sa paire de cases (0.5 = droit, 0.66 ≈ ternaire), avec `0.0` traité comme cas particulier signifiant « droit » (plutôt que littéralement la position 0). Les paires sont formées par cases consécutives (case paire = temps, case impaire = contretemps) ; ça couvre le cas documenté (grille de croches, 2 cases par temps) et les grilles plus fines sans erreur, sans viser un rendu de swing fidèle au-delà des croches.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 
-_À remplir à la clôture._
+**Ce qui a marché**
+
+- Le découpage en 5 PR (format, bibliothèque, transport, lecteur, finitions) a permis de livrer et tester chaque brique séparément, comme en phase 01 ; CI verte du premier coup sur les 5 PR.
+- Le transport recalculé à chaque appel depuis le temps total écoulé (jamais par accumulation de petits deltas) a rendu le critère « dérive < 5 ms sur 5 min » vérifiable par un test automatique plutôt que par une mesure manuelle — gain de temps net et plus fiable.
+- Réutiliser le kit visuel de la phase 01 tel quel sous les couloirs défilants (plutôt que refaire une vue dédiée) a gardé l'expérience de jeu cohérente entre jeu libre et lecture de partition.
+- Écrire les 12 grooves directement en TOML (plutôt que passer par un éditeur dédié) a été rapide et les erreurs de saisie (longueur de ligne, symbole, élément) étaient détectées immédiatement par les validations ajoutées à `core/score.py`.
+
+**Ce qui a coincé**
+
+- Composer 12 grooves sans pouvoir les écouter ni les jouer avant la PR 4 était un pari : plausible musicalement sur le papier, mais seule une vraie session de jeu pouvait confirmer que ça groove. Pour une prochaine bibliothèque de contenu, livrer le lecteur minimal avant (ou avec) le contenu réduirait ce délai de validation.
+- Deux décisions ont dû être tranchées sans spécification précise du cadrage (la formule du swing en PR 1, le comportement exact d'Échap une fois plusieurs écrans introduits en PR 4) ; documentées sur le moment, mais un cadrage qui anticipe ces cas-là éviterait l'aller-retour implicite de « je choisis, puis je te préviens ».
+- Un bug de la phase 01 (charleston fermée masquée par l'ouverte) n'a été repéré qu'en vérifiant visuellement le rendu pendant la PR 4 — un rappel que les captures d'écran pendant le développement valent mieux qu'une relecture du code seule pour ce genre de régression visuelle.

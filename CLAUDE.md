@@ -71,9 +71,13 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 ## 8. Phase en cours
 
-**Phase 02 — Partitions** → [docs/phases/phase-02-partitions.md](docs/phases/phase-02-partitions.md)
+**Phase 03 — Vision : preuve de concept** → [docs/phases/phase-03-vision-poc.md](docs/phases/phase-03-vision-poc.md)
+Prérequis avant d'y toucher : demander le matériel de l'utilisateur (processeur, mémoire,
+carte graphique, webcams) — voir la section « Prérequis » du document de phase.
 
-Phase 01 — Batterie au clavier (V1, MVP) terminée le 2026-10-09, tag `v0.1.0` → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)
+Phases terminées :
+- Phase 02 — Partitions (V2) terminée le 2026-10-09, tag `v0.2.0` → [docs/phases/phase-02-partitions.md](docs/phases/phase-02-partitions.md)
+- Phase 01 — Batterie au clavier (V1, MVP) terminée le 2026-10-09, tag `v0.1.0` → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)
 
 ## 9. Interdits et pièges connus
 
