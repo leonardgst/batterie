@@ -10,6 +10,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 - Format de partition et chargeur (phase 02, PR 1) : `core/score.py` (grille façon tablature, symboles `-`/`x`/`X`/`g`, swing), `scores/rock/groove-de-base.toml` comme premier exemple réel.
 - Bibliothèque de partitions (phase 02, PR 2) : 12 grooves originaux (3 par style : rock, jazz, other, solo), licence CC0-1.0, dans `scores/<style>/`.
 - Transport et métronome (phase 02, PR 3) : `core/transport.py` (horloge beat ↔ secondes, tempo réglable 50-120 %, pause/reprise, décompte, clics de métronome), sans dérive mesurable sur 5 minutes simulées (`tests/test_transport.py`).
+- Lecteur de partitions (phase 02, PR 4) : écran d'accueil (jeu libre / partitions), choix du style puis de la partition, couloirs de coups qui défilent au-dessus du kit, décompte visuel d'une mesure, pause (Échap) et écran de fin. `uv run batterie` permet maintenant de choisir et de jouer un morceau du début à la fin.
+
+### Fixed
+
+- La charleston fermée et la charleston ouverte (même position visuelle) masquaient parfois l'illumination l'une de l'autre selon l'ordre de dessin ; l'élément allumé passe maintenant toujours au premier plan (`ui/kit_view.py`).
 
 ## [0.1.0] - 2026-10-09
 

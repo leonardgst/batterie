@@ -3,7 +3,7 @@
 import pygame
 import pytest
 
-from batterie.ui.kit_view import FLASH_DURATION_S, KitView
+from batterie.ui.kit_view import _LAYOUT, FLASH_COLOR, FLASH_DURATION_S, KitView, _transform
 
 
 @pytest.fixture(autouse=True)
@@ -20,6 +20,20 @@ def test_draw_runs_without_error_for_every_element():
     for element_id in ("kick", "snare", "crash", "hihat_closed", "ride"):
         view.flash(element_id)
     view.draw(screen)  # ne doit pas lever d'exception
+
+
+def test_lit_hihat_closed_is_drawn_above_unlit_hihat_open():
+    # hihat_closed et hihat_open partagent la même position (même élément physique) :
+    # celui allumé doit rester visible, peu importe l'ordre de dessin par défaut.
+    view = KitView()
+    view.flash("hihat_closed")
+    screen = pygame.display.get_surface()
+    view.draw(screen)
+
+    center, _radius = _transform(
+        _LAYOUT["hihat_closed"][:2], _LAYOUT["hihat_closed"][2], screen.get_rect()
+    )
+    assert screen.get_at(center)[:3] == FLASH_COLOR
 
 
 def test_flash_marks_element_as_lit_until_it_expires(monkeypatch):
