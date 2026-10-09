@@ -18,10 +18,10 @@ Référence : [cadrage](../00-cadrage.md), user stories US1 à US3.
 - [x] `Batterie.bat` (lanceur double-clic)
 
 **PR 2 — Sons et audio** (`feat/audio-engine`)
-- [ ] `tools/gen_synth_kit.py` : kit synthétique de secours, sans aucune question de droits
-- [ ] Kit CC0 / domaine public choisi, licence vérifiée et recopiée : `assets/kits/default/` + `kit.toml` + `LICENSE`
-- [ ] `audio/engine.py` : `pygame.mixer` 48 kHz, tampon 256, 32 voix, étouffement de la charleston ouverte
-- [ ] `tools/latency_probe.py` + mesures consignées dans l'ADR 0001
+- [x] `tools/gen_synth_kit.py` : kit synthétique de secours, sans aucune question de droits
+- [x] Kit CC0 / domaine public choisi, licence vérifiée et recopiée : `assets/kits/default/` + `kit.toml` + `LICENSE` — voir écart ci-dessous
+- [x] `audio/engine.py` : `pygame.mixer` 48 kHz, tampon 256, 32 voix, étouffement de la charleston ouverte
+- [x] `tools/latency_probe.py` + mesures consignées dans l'ADR 0001
 
 **PR 3 — Fenêtre et clavier** (`feat/keyboard-kit`)
 - [ ] `core/elements.py` : les 10 éléments et la correspondance par défaut (cadrage §2.4)
@@ -48,7 +48,8 @@ Référence : [cadrage](../00-cadrage.md), user stories US1 à US3.
 
 ## Écarts par rapport au plan
 
-_À remplir au fil de la phase._
+- **PR 2 — kit « default ».** Le plan prévoyait de choisir et vérifier un kit CC0 / domaine public enregistré (Hydrogen, SCC Drums, Meadowlark…), le générateur synthétique ne servant que de secours. Télécharger et vérifier la licence d'un pack externe demande une diligence (lire la licence exacte, l'attribution, les conditions de redistribution) que Claude Code ne peut pas mener de façon fiable depuis cet environnement (pas de navigateur, pas de téléchargement de binaire vérifié). Le kit synthétique (`tools/gen_synth_kit.py`) est donc devenu le kit `assets/kits/default/` : création 100 % originale du projet, dédiée au domaine public (CC0-1.0), donc aucun risque de droits. Remplacer ce kit par un kit enregistré sous licence libre reste possible plus tard (C4 « plusieurs kits sonores », cadrage §2.1) sans changer l'interface `AudioEngine`/`kit.toml`.
+- **PR 2 — latence mesurée légèrement au-dessus de la cible.** Le tampon de 256 échantillons à 48 kHz (imposé par `CLAUDE.md`) a lui seul 5,33 ms de latence théorique, donc la latence totale estimée (≈ 5,37 ms) dépasse légèrement la cible « < 5 ms » de la phase. Voir ADR 0001 : décision provisoire de garder le tampon 256 et de confirmer (ou réduire à 128) après le test au casque filaire, une fois le clavier branché en PR 3.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 

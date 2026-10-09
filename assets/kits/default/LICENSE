@@ -1,0 +1,12 @@
+CC0 1.0 Universal (domaine public)
+
+Les fichiers audio de ce dossier (assets/kits/default/) sont une création
+originale du projet Batterie, générée par tools/gen_synth_kit.py à partir de
+formes d'onde synthétiques (sinus, bruit blanc). Aucun échantillon tiers n'est
+utilisé.
+
+Dans la mesure permise par la loi, l'auteur dédie ce travail au domaine public
+en renonçant à tous ses droits, y compris les droits d'auteur, dans le monde
+entier, sous les termes de la licence CC0 1.0 Universal.
+
+Texte complet de la licence : https://creativecommons.org/publicdomain/zero/1.0/
