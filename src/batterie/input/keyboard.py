@@ -15,6 +15,11 @@ SCANCODE_TO_ELEMENT: dict[int, str] = {
 }
 
 
+def scancode_map_from_key_map(key_map: dict[str, str]) -> dict[int, str]:
+    """Convertit ``{element_id: nom_scancode}`` (ex. ``Settings.key_map``) en ``{scancode: id}``."""
+    return {getattr(pygame, f"KSCAN_{name}"): element_id for element_id, name in key_map.items()}
+
+
 class Keyboard:
     """Traduit des événements clavier pygame en identifiants d'élément frappé."""
 

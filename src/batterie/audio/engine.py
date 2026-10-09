@@ -66,11 +66,16 @@ def load_kit(kit_dir: Path) -> Kit:
 class AudioEngine:
     """Joue les coups d'un kit chargé, avec étouffement de groupe (charleston)."""
 
-    def __init__(self, kit: Kit) -> None:
+    def __init__(self, kit: Kit, master_volume: float = 1.0) -> None:
         pygame.mixer.set_num_channels(NUM_VOICES)
         self._kit = kit
         self._round_robin: dict[str, int] = {}
         self._group_channels: dict[str, pygame.mixer.Channel] = {}
+        self._master_volume = _clamp01(master_volume)
+
+    def set_master_volume(self, volume: float) -> None:
+        """Change le volume général (0.0 à 1.0), appliqué à tous les coups suivants."""
+        self._master_volume = _clamp01(volume)
 
     def play(self, element_id: str, velocity: float = 1.0) -> None:
         """Joue un coup sur ``element_id``. ``velocity`` entre 0 et 1 (1 au clavier)."""
@@ -84,7 +89,7 @@ class AudioEngine:
 
         sound = self._next_sound(element_id, sounds)
         gain = self._kit.gains.get(element_id, 1.0)
-        sound.set_volume(_clamp01(velocity) * gain)
+        sound.set_volume(_clamp01(velocity) * gain * self._master_volume)
         channel = sound.play()
 
         if group is not None and channel is not None:

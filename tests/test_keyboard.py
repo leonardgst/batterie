@@ -3,7 +3,7 @@
 import pygame
 import pytest
 
-from batterie.input.keyboard import SCANCODE_TO_ELEMENT, Keyboard
+from batterie.input.keyboard import SCANCODE_TO_ELEMENT, Keyboard, scancode_map_from_key_map
 
 
 @pytest.fixture(autouse=True)
@@ -52,3 +52,12 @@ def test_poll_reads_three_simultaneous_hits():
         _keydown(pygame.KSCAN_W),
     ]
     assert sorted(keyboard.poll(events)) == sorted(["kick", "snare", "crash"])
+
+
+def test_scancode_map_from_key_map_remaps_an_element():
+    custom_map = scancode_map_from_key_map({"kick": "M"})
+    assert custom_map == {pygame.KSCAN_M: "kick"}
+
+    keyboard = Keyboard(custom_map)
+    assert keyboard.poll([_keydown(pygame.KSCAN_M)]) == ["kick"]
+    assert keyboard.poll([_keydown(pygame.KSCAN_SPACE)]) == []

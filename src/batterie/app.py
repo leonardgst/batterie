@@ -12,7 +12,8 @@ from pathlib import Path
 import pygame
 
 from batterie.audio.engine import AudioEngine, init_mixer, load_kit
-from batterie.input.keyboard import Keyboard
+from batterie.config.settings import load_settings
+from batterie.input.keyboard import Keyboard, scancode_map_from_key_map
 from batterie.ui.kit_view import KitView
 
 WINDOW_TITLE = "Batterie"
@@ -45,8 +46,9 @@ def handle_events(events: list[pygame.event.Event]) -> bool:
 def run() -> None:
     """Boucle jusqu'à la fermeture de la fenêtre ou l'appui sur Échap."""
     screen = create_window()
-    engine = AudioEngine(load_kit(DEFAULT_KIT_DIR))
-    keyboard = Keyboard()
+    settings = load_settings()
+    engine = AudioEngine(load_kit(DEFAULT_KIT_DIR), master_volume=settings.volume)
+    keyboard = Keyboard(scancode_map_from_key_map(settings.key_map))
     kit_view = KitView()
 
     poll_clock = pygame.time.Clock()
