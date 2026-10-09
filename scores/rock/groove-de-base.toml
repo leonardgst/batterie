@@ -1,0 +1,16 @@
+title = "Rock — groove de base"
+style = "rock"
+bpm = 90
+time_signature = [4, 4]
+grid = 8
+swing = 0.0
+difficulty = 1
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 4
+hihat_closed = "xxxxxxxx"
+snare        = "--x---x-"
+kick         = "x---x---"
