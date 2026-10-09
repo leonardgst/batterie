@@ -2,7 +2,7 @@
 
 | Statut | Date | Phase |
 | --- | --- | --- |
-| Proposé (à confirmer par les mesures de la phase 01) | 2026-10-03 | 01 |
+| Accepté (mesures logicielles ci-dessous ; ressenti en jouant à valider en PR 3) | 2026-10-09 | 01 |
 
 ## Contexte
 
@@ -29,6 +29,8 @@ Le moteur est placé derrière une interface minimale (`play(element, velocity)`
 
 ## Mesures
 
+Mesurées avec `tools/latency_probe.py` (PR 2, `AudioEngine.play`, 200 essais sur `snare`, kit synthétique par défaut).
+
 | Date | Sortie audio | Tampon | Délai logiciel | Ressenti | Décision |
 | --- | --- | --- | --- | --- | --- |
-| _à venir_ | | | | | |
+| 2026-10-09 | Sortie par défaut Windows (à refaire au casque filaire en PR 3) | 256 échantillons @ 48 kHz | Appel Python : 0,036 ms (moy.), 0,174 ms (max). Tampon théorique : 5,33 ms. Total estimé : ≈ 5,37 ms | Non testé en jouant (pas encore de clavier branché, PR 3) | Garder le tampon à 256 pour l'instant : le coût logiciel de l'appel est négligeable, le plancher vient du tampon SDL. 5,37 ms dépasse légèrement la cible de < 5 ms de la phase, mais reste loin du seuil de bascule (> 20 ms) et du seuil de perception usuel. À confirmer ou ajuster (ex. tampon 128) après le test au casque filaire en fin de phase 01 |

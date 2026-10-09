@@ -1,0 +1,28 @@
+# Kit synthétique de secours : généré par tools/gen_synth_kit.py, sans échantillon tiers.
+name = "default"
+license = "CC0-1.0"
+attribution = "Projet Batterie — sons synthétiques générés par tools/gen_synth_kit.py"
+
+[samples]
+kick = ["kick.wav"]
+hihat_pedal = ["hihat_pedal.wav"]
+hihat_closed = ["hihat_closed.wav"]
+hihat_open = ["hihat_open.wav"]
+snare = ["snare.wav"]
+tom_high = ["tom_high.wav"]
+tom_mid = ["tom_mid.wav"]
+tom_floor = ["tom_floor.wav"]
+crash = ["crash.wav"]
+ride = ["ride.wav"]
+
+[gains]
+kick = 1.0
+hihat_pedal = 0.8
+hihat_closed = 0.9
+hihat_open = 0.9
+snare = 1.0
+tom_high = 0.95
+tom_mid = 0.95
+tom_floor = 0.95
+crash = 0.9
+ride = 0.9
