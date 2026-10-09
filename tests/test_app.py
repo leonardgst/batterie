@@ -12,21 +12,13 @@ def test_create_window_opens_at_expected_size():
 
 
 def test_handle_events_stops_on_quit_event():
-    create_window()
-    pygame.event.post(pygame.event.Event(pygame.QUIT))
-    assert handle_events() is False
-    pygame.quit()
+    assert handle_events([pygame.event.Event(pygame.QUIT)]) is False
 
 
 def test_handle_events_stops_on_escape_key():
-    create_window()
-    pygame.event.post(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE))
-    assert handle_events() is False
-    pygame.quit()
+    assert handle_events([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_ESCAPE)]) is False
 
 
-def test_handle_events_continues_without_events():
-    create_window()
-    pygame.event.clear()
-    assert handle_events() is True
-    pygame.quit()
+def test_handle_events_continues_without_matching_events():
+    assert handle_events([]) is True
+    assert handle_events([pygame.event.Event(pygame.KEYDOWN, key=pygame.K_a)]) is True

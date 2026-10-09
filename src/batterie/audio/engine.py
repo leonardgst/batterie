@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pygame
 
+from batterie.core.elements import ELEMENTS
+
 MIXER_FREQUENCY = 48_000
 MIXER_SIZE = -16
 MIXER_CHANNELS = 2
@@ -20,10 +22,9 @@ NUM_VOICES = 32
 
 # Groupe d'étouffement : un nouveau coup dans ce groupe coupe le son encore en train
 # de jouer dans le même groupe (R4 du cadrage : fermée ou pédale coupe l'ouverte).
+# Dérivé de core/elements.py pour n'avoir qu'une seule source de vérité.
 CHOKE_GROUPS: dict[str, str] = {
-    "hihat_pedal": "hihat",
-    "hihat_closed": "hihat",
-    "hihat_open": "hihat",
+    element.id: element.choke_group for element in ELEMENTS if element.choke_group is not None
 }
 
 

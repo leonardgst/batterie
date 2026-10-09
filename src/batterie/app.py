@@ -1,28 +1,40 @@
-"""Boucle principale de l'application : fenêtre vide, Échap ou fermeture pour quitter."""
+"""Boucle principale : fenêtre, kit dessiné, clavier, son et illumination du coup.
+
+Le clavier est lu à chaque tour de boucle (≥ 500 Hz) ; le rendu est limité à
+60 images/s. Une touche n'attend jamais l'image suivante pour sonner.
+"""
 
 from __future__ import annotations
 
+import time
+from pathlib import Path
+
 import pygame
+
+from batterie.audio.engine import AudioEngine, init_mixer, load_kit
+from batterie.input.keyboard import Keyboard
+from batterie.ui.kit_view import KitView
 
 WINDOW_TITLE = "Batterie"
 WINDOW_SIZE = (1280, 720)
-BACKGROUND_COLOR = (20, 20, 20)
 TARGET_FPS = 60
+INPUT_POLL_HZ = 500
+
+DEFAULT_KIT_DIR = Path(__file__).resolve().parent.parent.parent / "assets" / "kits" / "default"
 
 
 def create_window() -> pygame.Surface:
     """Initialise pygame (audio avant fenêtre) et ouvre la fenêtre principale."""
-    pygame.mixer.pre_init(48000, -16, 2, 256)
+    init_mixer()
     pygame.init()
-    pygame.mixer.set_num_channels(32)
     screen = pygame.display.set_mode(WINDOW_SIZE)
     pygame.display.set_caption(WINDOW_TITLE)
     return screen
 
 
-def handle_events() -> bool:
-    """Traite les événements en attente ; renvoie False si l'application doit s'arrêter."""
-    for event in pygame.event.get():
+def handle_events(events: list[pygame.event.Event]) -> bool:
+    """Renvoie False si l'application doit s'arrêter (fermeture de fenêtre ou Échap)."""
+    for event in events:
         if event.type == pygame.QUIT:
             return False
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -33,14 +45,31 @@ def handle_events() -> bool:
 def run() -> None:
     """Boucle jusqu'à la fermeture de la fenêtre ou l'appui sur Échap."""
     screen = create_window()
-    clock = pygame.time.Clock()
+    engine = AudioEngine(load_kit(DEFAULT_KIT_DIR))
+    keyboard = Keyboard()
+    kit_view = KitView()
+
+    poll_clock = pygame.time.Clock()
+    render_interval_s = 1.0 / TARGET_FPS
+    next_render = time.perf_counter()
+
     running = True
     try:
         while running:
-            running = handle_events()
-            screen.fill(BACKGROUND_COLOR)
-            pygame.display.flip()
-            clock.tick(TARGET_FPS)
+            events = pygame.event.get()
+            running = handle_events(events)
+
+            for element_id in keyboard.poll(events):
+                engine.play(element_id)
+                kit_view.flash(element_id)
+
+            now = time.perf_counter()
+            if now >= next_render:
+                kit_view.draw(screen)
+                pygame.display.flip()
+                next_render = now + render_interval_s
+
+            poll_clock.tick(INPUT_POLL_HZ)
     finally:
         pygame.quit()
 
