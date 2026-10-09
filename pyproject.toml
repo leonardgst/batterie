@@ -9,6 +9,8 @@ dependencies = [
     "pygame-ce>=2.5",
     "platformdirs>=4.0",
     "tomli-w>=1.0",
+    "opencv-python>=4.9",
+    "numpy>=1.26",
 ]
 
 [project.scripts]
