@@ -8,6 +8,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 ### Added
 
 - Suivi de couleur et détection de coup (phase 03, PR 1) : `core/events.py` (`HitEvent`/`Source`), `input/vision/color_tracker.py` (suivi HSV d'un embout coloré) et `input/vision/strike_detector.py` (détection d'un coup au franchissement d'un plan de frappe), logique pure testée sur des images et trajectoires synthétiques, sans caméra.
+- Processus caméra et écran de débogage (phase 03, PR 2) : `input/vision/process.py` (capture dans un processus séparé, file de `VisionSample`), `tools/vision_debug.py` (aperçu caméra, plan de frappe, vitesse, images/s, latence, compteur de coups) — à calibrer et essayer avec ta webcam.
 
 ## [0.2.0] - 2026-10-09
 

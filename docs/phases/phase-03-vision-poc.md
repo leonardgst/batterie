@@ -51,9 +51,9 @@ critère de fin (détection, latence, décision go/no-go).
 - [x] Dépendances `opencv-python` et `numpy` ajoutées (`pyproject.toml`)
 
 **PR 2 — Processus caméra séparé et écran de débogage** (`feat/vision-capture`)
-- [ ] `input/vision/process.py` : boucle caméra dans un `multiprocessing.Process`, envoie les `HitEvent` par file inter-processus (cadrage §4.1) ; source d'image injectable pour pouvoir tester la boucle sans caméra réelle
-- [ ] `tools/vision_debug.py` : fenêtre de débogage — position suivie, vitesse, images/s, latence de traitement
-- [ ] Nécessite ta webcam : à essayer et ajuster par toi (plage de couleur HSV à calibrer pour ton embout, ta lumière)
+- [x] `input/vision/process.py` : boucle caméra dans un `multiprocessing.Process`, transmet des `VisionSample` (position, vitesse, images/s, latence, éventuel `HitEvent`) par file inter-processus (cadrage §4.1) ; source d'image injectable pour tester la boucle sans caméra réelle
+- [x] `tools/vision_debug.py` : fenêtre de débogage — aperçu caméra, plan de frappe, point suivi, vitesse, images/s, latence de traitement, compteur de coups
+- [ ] Nécessite ta webcam : à essayer et ajuster par toi (plage de couleur HSV et position du plan de frappe à calibrer pour ton embout, ta lumière, ta caméra)
 
 **PR 3 — Protocole de mesure et décision go/no-go** (`feat/vision-measure`)
 - [ ] `tools/vision_measure.py` : séance guidée de 50 coups, compte les coups détectés et les statistiques de latence de traitement
@@ -74,6 +74,8 @@ _Aucune pour l'instant._
 
 ## Écarts par rapport au plan
 
+- **PR 2 — calibration par édition de constantes, pas d'écran de réglage en direct.** `tools/vision_debug.py` affiche la couleur suivie et le plan de frappe, mais pour changer la plage HSV ou la position du plan il faut éditer les constantes en haut du fichier et relancer (pas de flèches/souris en direct). Un canal de configuration en direct entre les deux processus était possible mais alourdissait cette PR pour un outil de diagnostic ponctuel ; éditer-relancer reste rapide (la caméra se réinitialise en une seconde environ). À reconsidérer si la calibration s'avère trop fastidieuse en pratique.
+- **PR 2 — image réduite avant détection (`WORKING_WIDTH` = 320 px).** Le suivi et la détection de coup se font sur l'image déjà réduite, pas sur la résolution native de la caméra : ça garde `STRIKE_PLANE_Y` dans le même repère que ce qui s'affiche à l'écran (plus simple à calibrer), et ça allège le calcul sur un processeur sans carte graphique dédiée.
 - **PR 1 — seuils par défaut non calibrés.** `MIN_BLOB_AREA` (30 px²), `min_speed_px_per_s` (200 px/s) et `refractory_s` (0,15 s) dans `strike_detector.py`, ainsi que les plages de couleur `GREEN`/`MAGENTA` dans `color_tracker.py`, sont des valeurs de départ raisonnables mais pas mesurées sur une vraie image de ta webcam, ta lumière, ton embout. Attends-toi à devoir les ajuster une fois l'écran de débogage (PR 2) en main — ce sera plus rapide à l'œil qu'en théorie.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
