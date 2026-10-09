@@ -106,12 +106,12 @@ Tu es mon architecte logiciel et tech lead sur ce projet. À partir de ce docume
 | Élément | Valeur |
 | --- | --- |
 | Système d'exploitation | Windows |
-| Processeur | ⏳ *À faire plus tard* — avant la phase 03 |
-| Mémoire vive (Go) | ⏳ *À faire plus tard* — avant la phase 03 |
-| Carte graphique (modèle, Go de VRAM) | ⏳ *À faire plus tard* (modèle et VRAM, ou « aucune ») — avant la phase 03 |
+| Processeur | Intel Core i7-1255U (12e génération), 1,70 GHz |
+| Mémoire vive (Go) | 16 Go |
+| Carte graphique (modèle, Go de VRAM) | Intel Iris Xe Graphics, intégrée — pas de VRAM dédiée (mémoire partagée avec la RAM) |
 | Espace disque libre (Go) | ⏳ *À faire plus tard* |
-| Caméras / webcams déjà possédées | ⏳ *À faire plus tard* (modèles, ou « aucune ») — avant la phase 03 |
-| Sortie audio | ⏳ *À faire plus tard* (casque ou enceintes, filaire ou Bluetooth) — utile dès la phase 01 |
+| Caméras / webcams déjà possédées | Webcam intégrée à l'ordinateur portable (modèle non précisé) ; aucune caméra externe |
+| Sortie audio | Casque filaire — latence validée en phase 01 (ADR 0001) |
 | Autres machines | ⏳ *À faire plus tard* (optionnel) |
 
 ### 6.2 Environnement
