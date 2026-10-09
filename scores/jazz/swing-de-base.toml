@@ -1,0 +1,17 @@
+title = "Jazz — swing de base"
+style = "jazz"
+bpm = 120
+time_signature = [4, 4]
+grid = 8
+swing = 0.66
+difficulty = 1
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 8
+ride        = "X-XxX-Xx"
+hihat_pedal = "--x---x-"
+snare       = "-g---g--"
+kick        = "x---x---"

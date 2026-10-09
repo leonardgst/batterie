@@ -1,0 +1,22 @@
+title = "Rock — croches syncopées"
+style = "rock"
+bpm = 100
+time_signature = [4, 4]
+grid = 8
+swing = 0.0
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "Intro"
+repeat = 1
+crash = "x-------"
+kick  = "x-------"
+
+[[section]]
+name = "Groove"
+repeat = 4
+hihat_closed = "xxxxxxxx"
+snare        = "--x---x-"
+kick         = "x--x-x--"

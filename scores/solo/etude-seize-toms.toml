@@ -1,0 +1,17 @@
+title = "Étude — seize autour du kit"
+style = "solo"
+bpm = 90
+time_signature = [4, 4]
+grid = 16
+swing = 0.0
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 4
+tom_high  = "x---x---x---x---"
+tom_mid   = "-x---x---x---x--"
+tom_floor = "--x---x---x---x-"
+snare     = "---x---x---x---x"

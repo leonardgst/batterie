@@ -153,6 +153,10 @@ def load_score(path: Path) -> Score:
     with path.open("rb") as handle:
         data = tomllib.load(handle)
 
+    style = data["style"]
+    if style not in STYLES:
+        raise ValueError(f"Style inconnu {style!r} (attendu : {', '.join(STYLES)})")
+
     time_signature = tuple(data["time_signature"])
     grid = int(data["grid"])
     swing = float(data.get("swing", 0.0))
@@ -164,7 +168,7 @@ def load_score(path: Path) -> Score:
     return Score(
         id=path.stem,
         title=data["title"],
-        style=data["style"],
+        style=style,
         bpm=float(data["bpm"]),
         time_signature=time_signature,
         grid=grid,

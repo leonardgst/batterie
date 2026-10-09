@@ -1,0 +1,17 @@
+title = "Exercice — croches autour du kit"
+style = "solo"
+bpm = 80
+time_signature = [4, 4]
+grid = 8
+swing = 0.0
+difficulty = 1
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 4
+snare     = "x---x---"
+tom_high  = "-x---x--"
+tom_mid   = "--x---x-"
+tom_floor = "---x---x"

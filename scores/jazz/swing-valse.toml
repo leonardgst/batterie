@@ -1,0 +1,16 @@
+title = "Jazz — valse swinguée"
+style = "jazz"
+bpm = 140
+time_signature = [3, 4]
+grid = 6
+swing = 0.66
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 8
+ride        = "X-X-Xx"
+hihat_pedal = "--x---"
+kick        = "x-----"

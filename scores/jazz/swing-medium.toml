@@ -1,0 +1,17 @@
+title = "Jazz — medium swing, walking kick"
+style = "jazz"
+bpm = 132
+time_signature = [4, 4]
+grid = 8
+swing = 0.66
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 8
+ride        = "X-XxX-Xx"
+hihat_pedal = "--x---x-"
+snare       = "---g---g"
+kick        = "x-x-x-x-"
