@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| En cours | Octobre 2026 (2 à 3 semaines, 4–6 h de ton temps) | — | v0.1.0 |
+| Terminée | Octobre 2026 (2 à 3 semaines, 4–6 h de ton temps) | 2026-10-09 | v0.1.0 |
 
 ## Objectif
 
@@ -38,8 +38,8 @@ Référence : [cadrage](../00-cadrage.md), user stories US1 à US3.
 
 - [x] Tests au vert (CI Windows)
 - [x] Documentation à jour (README, CHANGELOG, journal, ADR 0001)
-- [ ] Testé en jouant : les 10 éléments, 3 touches simultanées, roulement rapide sur une touche, aucun retard perçu au casque filaire — à toi de valider
-- [ ] Latence logicielle touche → mixeur < 5 ms (mesurée) — ≈ 5,37 ms mesurés en PR 2 (voir ADR 0001), à reconfirmer à l'oreille
+- [x] Testé en jouant : les 10 éléments, 3 touches simultanées, roulement rapide sur une touche, aucun retard perçu au casque filaire — validé par toi le 2026-10-09
+- [x] Latence logicielle touche → mixeur < 5 ms (mesurée) — ≈ 5,37 ms mesurés en PR 2 (voir ADR 0001), ressenti validé à l'oreille le 2026-10-09 malgré le léger dépassement théorique
 - [x] Licence du kit vérifiée et documentée
 
 ## Décisions prises (liens vers les ADR)
@@ -56,4 +56,15 @@ Référence : [cadrage](../00-cadrage.md), user stories US1 à US3.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 
-_À remplir à la clôture._
+**Ce qui a marché**
+
+- Le découpage en 4 PR (socle, audio, clavier, finitions) a permis de tester chaque brique indépendamment ; CI verte du premier coup sur les 4 PR.
+- `pygame.mixer` tient la cible de latence sans bibliothèque supplémentaire : validé à l'oreille au casque filaire, aucune bascule vers `sounddevice` nécessaire (ADR 0001).
+- Garder `core/` sans import pygame a permis de tester `elements.py` en pur Python, et de dériver le groupe d'étouffement de la charleston dans `audio/engine.py` depuis une seule source de vérité.
+- Le fichier `settings.toml` commenté, écrit une seule fois puis jamais réécrit automatiquement, permet de personnaliser touches et volume sans outil ni code, conforme au profil « je ne code pas » du projet.
+
+**Ce qui a coincé**
+
+- Sourcer et vérifier la licence d'un kit de sons enregistré (CC0/domaine public) depuis Claude Code n'était pas réaliste dans cet environnement (pas de navigateur, pas de téléchargement vérifiable) : le kit `default` livré est donc le générateur synthétique, pas un enregistrement réel. Les sons sont utilisables mais clairement synthétiques ; un kit plus réaliste reste un travail futur possible (cadrage, item Could C4).
+- L'API de pygame-ce 2.5.8 pour convertir un scancode en lettre affichée selon la disposition du clavier ne s'est pas comportée de façon exploitable ; l'étiquette affichée est donc fixe (lettres AZERTY du cadrage), sans impact sur le jeu lui-même (la détection reste par scancode).
+- La latence théorique du tampon audio (5,33 ms à elle seule) dépasse légèrement la cible chiffrée de la phase (< 5 ms) ; le ressenti en jouant prime sur le chiffre théorique, et le test au casque filaire l'a confirmé sans retard perçu.

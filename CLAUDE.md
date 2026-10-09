@@ -71,7 +71,9 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 ## 8. Phase en cours
 
-**Phase 01 — Batterie au clavier** → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)
+**Phase 02 — Partitions** → [docs/phases/phase-02-partitions.md](docs/phases/phase-02-partitions.md)
+
+Phase 01 — Batterie au clavier (V1, MVP) terminée le 2026-10-09, tag `v0.1.0` → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)
 
 ## 9. Interdits et pièges connus
 
