@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| À faire | 4 à 6 h de ton temps | — | v0.3.0 |
+| En cours | 4 à 6 h de ton temps | — | v0.3.0 |
 
 ## Objectif
 
@@ -32,15 +32,33 @@ restent à vérifier en tout début de phase (beaucoup de webcams intégrées pl
 (cadrage §7, « Recommandation caméra ») : la décision go/no-go et, si besoin, les
 caractéristiques précises à chercher, seront consignées dans un ADR à la clôture.
 
+## Ce que je peux faire seul, ce qu'il te faudra faire
+
+Contrairement aux phases 01 et 02, une partie de cette phase ne peut pas être testée
+ni mesurée par Claude Code : je n'ai pas de caméra, pas d'embout coloré, et je n'ouvrirai
+pas ta webcam moi-même (R9 du cadrage, vie privée — à faire seulement si tu me le
+demandes explicitement et pour un test précis). Je code et teste tout ce qui est logique
+pure (PR 1 entièrement), je construis les outils (PR 2 et PR 3), mais c'est toi qui les
+exécutes devant la caméra, calibres la couleur de ton embout et obtiens les chiffres du
+critère de fin (détection, latence, décision go/no-go).
+
 ## Livrables
 
-_Repris du cadrage §5 ; le découpage en PR reste à définir une fois le matériel connu._
+**PR 1 — Suivi de couleur et détection de coup (logique pure, testable sans caméra)** (`feat/vision-tracking`)
+- [x] `core/events.py` : `HitEvent` (élément, vélocité, horodatage, source), `Source` (clavier/MIDI/vision)
+- [x] `input/vision/color_tracker.py` : trouve le centre d'un embout coloré dans une image (HSV), testé sur des images synthétiques
+- [x] `input/vision/strike_detector.py` : détecte un coup au franchissement d'un plan de frappe à vitesse descendante (cadrage §3), testé sur des trajectoires synthétiques
+- [x] Dépendances `opencv-python` et `numpy` ajoutées (`pyproject.toml`)
 
-- [ ] Processus de vision séparé (`multiprocessing`), jamais dans le processus audio/rendu
-- [ ] Suivi d'un embout coloré (OpenCV, HSV) sur une webcam
-- [ ] Détection de coups sur la caisse claire (franchissement d'un plan de frappe à vitesse descendante, cadrage §3)
-- [ ] Écran de débogage : position suivie, vitesse, latence mesurée
-- [ ] Protocole de mesure consigné (comment on a mesuré, avec quoi)
+**PR 2 — Processus caméra séparé et écran de débogage** (`feat/vision-capture`)
+- [ ] `input/vision/process.py` : boucle caméra dans un `multiprocessing.Process`, envoie les `HitEvent` par file inter-processus (cadrage §4.1) ; source d'image injectable pour pouvoir tester la boucle sans caméra réelle
+- [ ] `tools/vision_debug.py` : fenêtre de débogage — position suivie, vitesse, images/s, latence de traitement
+- [ ] Nécessite ta webcam : à essayer et ajuster par toi (plage de couleur HSV à calibrer pour ton embout, ta lumière)
+
+**PR 3 — Protocole de mesure et décision go/no-go** (`feat/vision-measure`)
+- [ ] `tools/vision_measure.py` : séance guidée de 50 coups, compte les coups détectés et les statistiques de latence de traitement
+- [ ] Protocole de mesure consigné dans cette page (comment mesurer, avec quoi)
+- [ ] ADR 0002 : décision go/no-go et, si « go », caractéristiques de caméra à viser pour la suite — rempli avec tes résultats
 
 ## Critères de fin (Definition of Done)
 
@@ -56,7 +74,7 @@ _Aucune pour l'instant._
 
 ## Écarts par rapport au plan
 
-_À remplir au fil de la phase._
+- **PR 1 — seuils par défaut non calibrés.** `MIN_BLOB_AREA` (30 px²), `min_speed_px_per_s` (200 px/s) et `refractory_s` (0,15 s) dans `strike_detector.py`, ainsi que les plages de couleur `GREEN`/`MAGENTA` dans `color_tracker.py`, sont des valeurs de départ raisonnables mais pas mesurées sur une vraie image de ta webcam, ta lumière, ton embout. Attends-toi à devoir les ajuster une fois l'écran de débogage (PR 2) en main — ce sera plus rapide à l'œil qu'en théorie.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 
