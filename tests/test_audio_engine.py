@@ -84,3 +84,18 @@ def test_kick_is_not_choked_by_hihat(engine: AudioEngine):
 
     # Le kick ne doit jamais apparaître dans un groupe d'étouffement.
     assert "kick" not in engine._group_channels
+
+
+def test_master_volume_scales_playback_volume(engine: AudioEngine):
+    engine.set_master_volume(0.5)
+    engine.play("snare", velocity=1.0)
+
+    sound = engine._kit.samples["snare"][0]
+    expected = 0.5 * engine._kit.gains.get("snare", 1.0)
+    assert sound.get_volume() == pytest.approx(expected)
+
+
+def test_master_volume_is_clamped_to_zero_one():
+    kit = load_kit(KIT_DIR)
+    engine = AudioEngine(kit, master_volume=2.0)
+    assert engine._master_volume == 1.0
