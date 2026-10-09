@@ -14,8 +14,9 @@ import pygame
 
 from batterie.audio.engine import AudioEngine, init_mixer, load_kit
 from batterie.config.settings import load_settings
+from batterie.core.judge import Judge
 from batterie.core.score import STYLES, Score, discover_scores, load_score
-from batterie.core.transport import Transport
+from batterie.core.transport import TEMPO_FACTOR_STEP, Transport, clamp_tempo_factor
 from batterie.input.keyboard import Keyboard, scancode_map_from_key_map
 from batterie.ui.highway import HighwayView
 from batterie.ui.kit_view import BACKGROUND_COLOR, KitView
@@ -74,6 +75,23 @@ def _scores_for_style(style: str) -> list[Score]:
     return sorted(scores, key=lambda score: (score.difficulty, score.title))
 
 
+def _build_judge(score: Score, seconds_per_beat: float) -> Judge:
+    notes_by_element: dict[str, list[float]] = {}
+    for note in score.notes:
+        notes_by_element.setdefault(note.element_id, []).append(note.beat)
+    return Judge(notes_by_element=notes_by_element, seconds_per_beat=seconds_per_beat)
+
+
+def _start_playing(score: Score, tempo_factor: float, now_ns: int) -> tuple[Transport, Judge]:
+    """Crée le transport (décompte d'une mesure) et le jugement pour une lecture."""
+    transport = Transport(
+        bpm=score.bpm, time_signature=score.time_signature, tempo_factor=tempo_factor
+    )
+    transport.start(now_ns, count_in_beats=transport.beats_per_measure)
+    judge = _build_judge(score, transport.seconds_per_beat())
+    return transport, judge
+
+
 def _draw_centered_text(
     screen: pygame.Surface,
     area: pygame.Rect,
@@ -102,6 +120,8 @@ def run() -> None:
     score_menu: Menu[Score] | None = None
     score: Score | None = None
     transport: Transport | None = None
+    judge: Judge | None = None
+    tempo_factor = 1.0
 
     full_area = screen.get_rect()
     highway_height = int(WINDOW_SIZE[1] * HIGHWAY_HEIGHT_FRACTION)
@@ -158,16 +178,19 @@ def run() -> None:
                     score_menu.move(-1)
                 if _key_pressed(events, pygame.K_DOWN):
                     score_menu.move(1)
+                if _key_pressed(events, pygame.K_LEFT):
+                    tempo_factor = clamp_tempo_factor(tempo_factor - TEMPO_FACTOR_STEP)
+                if _key_pressed(events, pygame.K_RIGHT):
+                    tempo_factor = clamp_tempo_factor(tempo_factor + TEMPO_FACTOR_STEP)
                 if _key_pressed(events, pygame.K_RETURN) and score_menu.items:
                     score = score_menu.selected
-                    transport = Transport(bpm=score.bpm, time_signature=score.time_signature)
-                    transport.start(now_ns, count_in_beats=transport.beats_per_measure)
+                    transport, judge = _start_playing(score, tempo_factor, now_ns)
                     mode = Mode.PLAYING
                 if _key_pressed(events, pygame.K_ESCAPE):
                     mode = Mode.STYLE_SELECT
 
             elif mode == Mode.PLAYING:
-                assert transport is not None and score is not None
+                assert transport is not None and score is not None and judge is not None
                 if transport.is_paused:
                     if _key_pressed(events, pygame.K_RETURN):
                         transport.resume(now_ns)
@@ -177,17 +200,22 @@ def run() -> None:
                     if _key_pressed(events, pygame.K_ESCAPE):
                         transport.pause(now_ns)
                     else:
+                        current_beat = transport.current_beat(now_ns)
                         for element_id in keyboard.poll(events):
                             engine.play(element_id)
                             kit_view.flash(element_id)
-                        if transport.current_beat(now_ns) >= score.duration_beats:
+                            judgement = judge.register_hit(element_id, current_beat)
+                            if judgement is not None:
+                                highway_view.show_judgement(judgement.rating)
+                        if judge.expire_missed_notes(current_beat):
+                            highway_view.show_judgement("miss")
+                        if current_beat >= score.duration_beats:
                             mode = Mode.RESULT
 
             elif mode == Mode.RESULT:
                 assert score is not None
                 if _key_pressed(events, pygame.K_RETURN):
-                    transport = Transport(bpm=score.bpm, time_signature=score.time_signature)
-                    transport.start(now_ns, count_in_beats=transport.beats_per_measure)
+                    transport, judge = _start_playing(score, tempo_factor, now_ns)
                     mode = Mode.PLAYING
                 if _key_pressed(events, pygame.K_ESCAPE):
                     mode = Mode.SCORE_SELECT
@@ -207,6 +235,8 @@ def run() -> None:
                     score_menu,
                     score,
                     transport,
+                    judge,
+                    tempo_factor,
                     now_ns,
                 )
                 pygame.display.flip()
@@ -230,6 +260,8 @@ def _draw(
     score_menu: Menu[Score] | None,
     score: Score | None,
     transport: Transport | None,
+    judge: Judge | None,
+    tempo_factor: float,
     now_ns: int,
 ) -> None:
     screen.fill(BACKGROUND_COLOR)
@@ -249,12 +281,16 @@ def _draw(
         ]
         if not labels:
             labels = ["(aucune partition dans ce style)"]
-        draw_menu(screen, full_area, "Choisis une partition", labels, score_menu.index)
+        title = f"Choisis une partition — Tempo {int(tempo_factor * 100)} % (←/→)"
+        draw_menu(screen, full_area, title, labels, score_menu.index)
 
     elif mode == Mode.PLAYING and transport is not None and score is not None:
         current_beat = transport.current_beat(now_ns)
         highway_view.draw(screen, highway_area, score, current_beat)
         kit_view.draw(screen, kit_area)
+        tempo_font = pygame.font.SysFont("consolas", 18)
+        tempo_label = tempo_font.render(f"Tempo {int(tempo_factor * 100)} %", True, TEXT_COLOR)
+        screen.blit(tempo_label, tempo_label.get_rect(topright=(highway_area.right - 10, 10)))
         if current_beat < 0:
             count = int(-current_beat) + 1
             _draw_centered_text(screen, highway_area, [(str(count), 96, COUNT_IN_COLOR)])
@@ -269,14 +305,18 @@ def _draw(
             )
 
     elif mode == Mode.RESULT and score is not None:
-        _draw_centered_text(
-            screen,
-            full_area,
-            [
-                (f"Terminé : {score.title}", 48, TEXT_COLOR),
-                ("Entrée : rejouer — Échap : retour à la liste", 24, TEXT_COLOR),
-            ],
-        )
+        lines: list[tuple[str, int, tuple[int, int, int]]] = [
+            (f"Terminé : {score.title}", 48, TEXT_COLOR)
+        ]
+        if judge is not None and judge.total:
+            summary = (
+                f"Précision : {int(judge.accuracy * 100)} % — "
+                f"{judge.counts['perfect']} parfait, {judge.counts['good']} bien, "
+                f"{judge.counts['miss']} raté"
+            )
+            lines.append((summary, 24, TEXT_COLOR))
+        lines.append(("Entrée : rejouer — Échap : retour à la liste", 24, TEXT_COLOR))
+        _draw_centered_text(screen, full_area, lines)
 
 
 def main() -> int:
