@@ -5,6 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+### Added
+
+- Format de partition et chargeur (phase 02, PR 1) : `core/score.py` (grille façon tablature, symboles `-`/`x`/`X`/`g`, swing), `scores/rock/groove-de-base.toml` comme premier exemple réel.
+
 ## [0.1.0] - 2026-10-09
 
 Phase 01 — Batterie au clavier (V1, MVP) : jouer de tout le kit au clavier, sans retard perçu.
