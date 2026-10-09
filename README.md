@@ -2,13 +2,14 @@
 
 Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui défilent, puis jouez « dans le vide » devant une webcam avec des baguettes à embout coloré.
 
-> **Statut** : phase 01 (batterie au clavier) en cours. Voir [docs/00-cadrage.md](docs/00-cadrage.md) et [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md).
+> **Statut** : phase 01 (batterie au clavier) terminée — `v0.1.0`. Phase 02 (partitions) à venir.
+> Voir [docs/00-cadrage.md](docs/00-cadrage.md) et [docs/phases/](docs/phases/).
 
 ## Feuille de route
 
 | Version | Contenu | Statut |
 | --- | --- | --- |
-| V1 | Batterie au clavier | En cours |
+| V1 | Batterie au clavier | Terminé (`v0.1.0`) |
 | V2 | Partitions qui défilent | À faire |
 | V3 | Jeu à la caméra (mains, puis pieds) | À faire |
 
