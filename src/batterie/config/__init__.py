@@ -1,0 +1,1 @@
+"""Réglages utilisateur (%APPDATA%\\Batterie)."""

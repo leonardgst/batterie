@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| À faire | Octobre 2026 (2 à 3 semaines, 4–6 h de ton temps) | — | v0.1.0 |
+| En cours | Octobre 2026 (2 à 3 semaines, 4–6 h de ton temps) | — | v0.1.0 |
 
 ## Objectif
 
@@ -12,10 +12,10 @@ Référence : [cadrage](../00-cadrage.md), user stories US1 à US3.
 ## Livrables
 
 **PR 1 — Socle** (`chore/project-setup`)
-- [ ] `pyproject.toml` (uv, Python 3.12, pygame-ce, Ruff, pytest, script `batterie`)
-- [ ] `.github/workflows/ci.yml` : Ruff + pytest sur `windows-latest`
-- [ ] Squelette `src/batterie/` et `tests/` ; `uv run batterie` ouvre une fenêtre vide, Échap quitte
-- [ ] `Batterie.bat` (lanceur double-clic)
+- [x] `pyproject.toml` (uv, Python 3.12, pygame-ce, Ruff, pytest, script `batterie`)
+- [x] `.github/workflows/ci.yml` : Ruff + pytest sur `windows-latest`
+- [x] Squelette `src/batterie/` et `tests/` ; `uv run batterie` ouvre une fenêtre vide, Échap quitte
+- [x] `Batterie.bat` (lanceur double-clic)
 
 **PR 2 — Sons et audio** (`feat/audio-engine`)
 - [ ] `tools/gen_synth_kit.py` : kit synthétique de secours, sans aucune question de droits
