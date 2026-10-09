@@ -1,0 +1,19 @@
+title = "Solo — cymbales et toms"
+style = "solo"
+bpm = 100
+time_signature = [4, 4]
+grid = 8
+swing = 0.0
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 2
+crash     = "x-------"
+kick      = "x-------"
+tom_high  = "-x------"
+ride      = "--x-x-x-"
+tom_mid   = "---x----"
+tom_floor = "-----x-x"

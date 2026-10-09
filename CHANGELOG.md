@@ -8,6 +8,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 ### Added
 
 - Format de partition et chargeur (phase 02, PR 1) : `core/score.py` (grille façon tablature, symboles `-`/`x`/`X`/`g`, swing), `scores/rock/groove-de-base.toml` comme premier exemple réel.
+- Bibliothèque de partitions (phase 02, PR 2) : 12 grooves originaux (3 par style : rock, jazz, other, solo), licence CC0-1.0, dans `scores/<style>/`.
 
 ## [0.1.0] - 2026-10-09
 

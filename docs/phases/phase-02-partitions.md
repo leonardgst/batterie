@@ -18,9 +18,9 @@ Référence : [cadrage](../00-cadrage.md), user stories US4 à US6.
 - [x] Un premier exemple réel dans `scores/rock/` (sert de test ET de première partition)
 
 **PR 2 — Bibliothèque de partitions** (`feat/score-library`)
-- [ ] Au moins 12 partitions originales (3 par style : rock, jazz, other, solo), débutant à intermédiaire
-- [ ] Chaque partition déclare sa licence (CC0 ou création originale, cadrage R8)
-- [ ] Test : toutes les partitions de `scores/` se chargent sans erreur
+- [x] Au moins 12 partitions originales (3 par style : rock, jazz, other, solo), débutant à intermédiaire
+- [x] Chaque partition déclare sa licence (CC0 ou création originale, cadrage R8)
+- [x] Test : toutes les partitions de `scores/` se chargent sans erreur
 
 **PR 3 — Transport et métronome** (`feat/transport`)
 - [ ] `core/transport.py` : horloge (`time.perf_counter_ns`), tempo, facteur de tempo, conversion beat → secondes, métronome
@@ -57,6 +57,7 @@ _Aucune pour l'instant._
 
 ## Écarts par rapport au plan
 
+- **PR 2 — grooves pas encore testés en jouant.** Les 12 partitions sont validées structurellement (elles se chargent, le bon nombre de notes, aucune erreur), mais je ne peux pas les jouer moi-même pour confirmer qu'elles « sonnent » bien musicalement — pas d'oreille, et le lecteur de partition (PR 4) n'existe pas encore pour les essayer en situation. À vérifier par toi, en tant que batteur, une fois la PR 4 en place ; un groove qui ne te convient pas se corrige facilement dans son fichier `.toml`.
 - **PR 1 — précision du format laissée ouverte par le cadrage.** Le cadrage donne l'exemple `swing = 0.0 # droit, 0.66 = ternaire` sans formule précise. J'ai choisi : `swing` est directement la position (0 à 1) du contretemps dans sa paire de cases (0.5 = droit, 0.66 ≈ ternaire), avec `0.0` traité comme cas particulier signifiant « droit » (plutôt que littéralement la position 0). Les paires sont formées par cases consécutives (case paire = temps, case impaire = contretemps) ; ça couvre le cas documenté (grille de croches, 2 cases par temps) et les grilles plus fines sans erreur, sans viser un rendu de swing fidèle au-delà des croches.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé

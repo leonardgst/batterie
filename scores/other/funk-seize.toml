@@ -1,0 +1,16 @@
+title = "Funk — seize accentué"
+style = "other"
+bpm = 100
+time_signature = [4, 4]
+grid = 16
+swing = 0.0
+difficulty = 2
+author = "Projet Batterie"
+license = "CC0-1.0"
+
+[[section]]
+name = "A"
+repeat = 4
+hihat_closed = "XxxxXxxxXxxxXxxx"
+snare        = "----x----g--x---"
+kick         = "x---------x---x-"

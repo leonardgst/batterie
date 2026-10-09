@@ -160,6 +160,25 @@ def test_unknown_symbol_raises(tmp_path: Path):
         load_score(path)
 
 
+def test_unknown_style_raises(tmp_path: Path):
+    path = _write_score(
+        tmp_path,
+        """
+        title = "Bad"
+        style = "reggae"
+        bpm = 100
+        time_signature = [4, 4]
+        grid = 4
+        [[section]]
+        name = "A"
+        repeat = 1
+        kick = "x---"
+        """,
+    )
+    with pytest.raises(ValueError, match="Style inconnu"):
+        load_score(path)
+
+
 def test_discover_scores_finds_the_rock_example_and_skips_local():
     local_dir = SCORES_DIR / "local"
     local_dir.mkdir(exist_ok=True)
