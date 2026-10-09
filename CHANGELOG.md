@@ -11,6 +11,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 - Bibliothèque de partitions (phase 02, PR 2) : 12 grooves originaux (3 par style : rock, jazz, other, solo), licence CC0-1.0, dans `scores/<style>/`.
 - Transport et métronome (phase 02, PR 3) : `core/transport.py` (horloge beat ↔ secondes, tempo réglable 50-120 %, pause/reprise, décompte, clics de métronome), sans dérive mesurable sur 5 minutes simulées (`tests/test_transport.py`).
 - Lecteur de partitions (phase 02, PR 4) : écran d'accueil (jeu libre / partitions), choix du style puis de la partition, couloirs de coups qui défilent au-dessus du kit, décompte visuel d'une mesure, pause (Échap) et écran de fin. `uv run batterie` permet maintenant de choisir et de jouer un morceau du début à la fin.
+- Finitions V2 (phase 02, PR 5) : tempo réglable de 50 % à 120 % (flèches gauche/droite sur l'écran de sélection), jugement des coups (`core/judge.py`, cadrage R7 : parfait ≤ 35 ms, bien ≤ 90 ms, raté au-delà) avec retour visuel immédiat et précision affichée sur l'écran de fin, README complété (choisir et jouer une partition).
 
 ### Fixed
 

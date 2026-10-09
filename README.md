@@ -2,7 +2,7 @@
 
 Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui défilent, puis jouez « dans le vide » devant une webcam avec des baguettes à embout coloré.
 
-> **Statut** : phase 01 (batterie au clavier) terminée — `v0.1.0`. Phase 02 (partitions) à venir.
+> **Statut** : phase 01 (batterie au clavier) terminée — `v0.1.0`. Phase 02 (partitions) en cours.
 > Voir [docs/00-cadrage.md](docs/00-cadrage.md) et [docs/phases/](docs/phases/).
 
 ## Feuille de route
@@ -10,7 +10,7 @@ Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui d�
 | Version | Contenu | Statut |
 | --- | --- | --- |
 | V1 | Batterie au clavier | Terminé (`v0.1.0`) |
-| V2 | Partitions qui défilent | À faire |
+| V2 | Partitions qui défilent | En cours |
 | V3 | Jeu à la caméra (mains, puis pieds) | À faire |
 
 ## Installation (Windows)
@@ -44,6 +44,22 @@ quitte.
 | Charleston fermée | D | Crash | Z |
 | Charleston ouverte | E | Ride | I |
 | Caisse claire | F | Tom aigu | J |
+
+## Choisir et jouer une partition
+
+Depuis l'accueil (`uv run batterie`), flèches haut/bas pour choisir, Entrée pour
+valider :
+
+1. **Partitions** → choisis un style (rock, jazz, other, solo).
+2. Choisis une partition dans la liste (titre, tempo et difficulté affichés). Flèches
+   gauche/droite pour régler le tempo (de 50 % à 120 %, par pas de 5 %).
+3. Entrée : décompte d'une mesure, puis les coups à jouer défilent dans des couloirs
+   au-dessus du kit, jusqu'à leur ligne de frappe. Joue-les aux mêmes touches qu'en jeu
+   libre, au bon moment.
+4. Échap met en pause (Entrée pour reprendre) ; Échap une seconde fois quitte vers la
+   liste des partitions.
+5. À la fin du morceau : écran de résultat avec ta précision (parfait / bien / raté,
+   cadrage R7). Entrée pour rejouer, Échap pour revenir à la liste.
 
 ## Personnaliser les touches et le volume
 

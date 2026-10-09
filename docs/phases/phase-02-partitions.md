@@ -34,9 +34,9 @@ Référence : [cadrage](../00-cadrage.md), user stories US4 à US6.
 - [ ] Testé en jouant : un morceau choisi et joué du début à la fin — à toi de valider
 
 **PR 5 — Finitions V2** (`feat/score-finishing`)
-- [ ] Tempo réglable, 50 % à 120 % par pas de 5 % (US6, Should mais requis par le critère de fin de la phase)
-- [ ] Jugement simple des coups (parfait / bien / raté, cadrage R7) et affichage du score (Should)
-- [ ] README mis à jour (choisir et jouer une partition)
+- [x] Tempo réglable, 50 % à 120 % par pas de 5 % (US6, Should mais requis par le critère de fin de la phase)
+- [x] Jugement simple des coups (parfait / bien / raté, cadrage R7) et affichage du score (Should)
+- [x] README mis à jour (choisir et jouer une partition)
 
 **Hors périmètre de cette phase** (écart assumé, voir cadrage §2.1 S6) :
 import de fichiers MIDI personnels. Nécessite la dépendance `mido` et un mappage General
@@ -45,11 +45,11 @@ très bien sans (les partitions TOML suffisent à jouer un morceau en entier).
 
 ## Critères de fin (Definition of Done)
 
-- [ ] Tests au vert (CI Windows)
-- [ ] Documentation à jour (README, CHANGELOG, journal)
-- [ ] Testé en jouant : un morceau choisi et joué du début à la fin en suivant les touches affichées
+- [x] Tests au vert (CI Windows)
+- [x] Documentation à jour (README, CHANGELOG, journal)
+- [ ] Testé en jouant : un morceau choisi et joué du début à la fin en suivant les touches affichées — à toi de valider
 - [x] Dérive de synchronisation < 5 ms sur 5 minutes (test automatique) — `tests/test_transport.py`
-- [ ] Licence de chaque partition vérifiée et documentée
+- [x] Licence de chaque partition vérifiée et documentée — CC0-1.0, créations originales (`scores/<style>/*.toml`)
 
 ## Décisions prises (liens vers les ADR)
 
@@ -57,6 +57,7 @@ _Aucune pour l'instant._
 
 ## Écarts par rapport au plan
 
+- **PR 5 — tempo réglable seulement avant de lancer la partition, pas pendant.** Changer `tempo_factor` en cours de lecture décalerait d'un coup toutes les notes déjà passées (le calcul `beat × secondes/beat` recalibre toute la chronologie, pas seulement la suite) : un changement à la volée aurait fait sauter les couloirs. Le tempo se choisit donc sur l'écran de sélection (flèches gauche/droite), avant le décompte ; il reste modifiable entre deux morceaux sans tout refermer.
 - **PR 4 — Échap ne quitte plus directement l'application.** Avant cette PR, Échap fermait l'application depuis n'importe quel écran (comportement validé à la clôture de la phase 01). Avec l'arrivée d'un accueil et de plusieurs écrans, Échap est maintenant contextuel : il remonte d'un écran (partition → style → accueil), met en pause pendant la lecture d'un morceau, puis quitte l'application depuis l'accueil (ou la fermeture de la fenêtre, à tout moment). À re-tester : ce n'est plus exactement le comportement que tu avais validé en phase 01.
 - **PR 4 — métronome visuel, pas sonore.** Le décompte et le suivi du tempo pendant la lecture sont uniquement visuels (grand chiffre puis couloirs qui défilent) ; aucun clic audio de métronome. Ajouter un son demanderait un nouvel asset et un chemin de lecture dédié (le clic n'est pas un élément du kit) ; reporté pour garder cette PR raisonnable. Possible en PR 5 ou plus tard si tu le souhaites.
 - **PR 4 — orchestration des écrans dans `app.py`, pas de `ui/scenes/`.** L'architecture du cadrage esquissait un dossier `ui/scenes/` ; avec seulement 6 écrans de logique simple (accueil, jeu libre, style, partition, lecture, résultat), un module unique reste plus lisible qu'une collection de petits fichiers. À revoir si la V3 (plusieurs écrans de calibration vision) rend ce découpage utile.
