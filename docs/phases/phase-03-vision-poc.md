@@ -12,15 +12,25 @@ avant d'acheter quoi que ce soit. C'est la première sous-version de la V3 (V3.0
 Référence : [cadrage](../00-cadrage.md), user story US7 (critères réduits à un seul
 élément pour cette preuve de concept).
 
-## Prérequis — à demander avant de commencer
+## Prérequis — obtenus le 2026-10-09
 
-Le cadrage (§6.1) laisse ces informations « à faire plus tard » ; elles sont
-nécessaires avant d'écrire du code de vision (choix de la résolution, de la
-fréquence d'image, et si un modèle plus lourd comme MediaPipe est envisageable) :
+Le cadrage (§6.1) laissait ces informations « à faire plus tard » ; nécessaires
+avant d'écrire du code de vision (résolution, fréquence d'image visées, et si un
+modèle plus lourd comme MediaPipe est envisageable). Reportées dans le cadrage §6.1.
 
-- [ ] Processeur, mémoire vive (Go)
-- [ ] Carte graphique (modèle, Go de VRAM, ou « aucune »)
-- [ ] Webcam(s) déjà possédée(s) (modèle, ou « aucune »)
+- [x] Processeur : Intel Core i7-1255U (12e génération, 1,70 GHz)
+- [x] Mémoire vive : 16 Go
+- [x] Carte graphique : Intel Iris Xe Graphics, intégrée — pas de VRAM dédiée
+- [x] Webcam(s) : webcam intégrée à l'ordinateur portable (modèle non précisé), aucune caméra externe
+
+**Lecture pour la suite** : processeur mobile récent sans carte graphique dédiée — cohérent
+avec le choix du cadrage (suivi de couleur léger en 640×480 sur le processeur, OpenCV,
+pas de MediaPipe par défaut). Pas de caméra externe : la preuve de concept se fait avec la
+webcam intégrée (cadrage §3, risque 3) ; sa résolution et sa fréquence d'image réelles
+restent à vérifier en tout début de phase (beaucoup de webcams intégrées plafonnent à
+30 i/s, parfois moins en basse lumière). Aucun achat avant la fin de cette phase
+(cadrage §7, « Recommandation caméra ») : la décision go/no-go et, si besoin, les
+caractéristiques précises à chercher, seront consignées dans un ADR à la clôture.
 
 ## Livrables
 
