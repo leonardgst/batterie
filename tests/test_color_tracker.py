@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
-from batterie.input.vision.color_tracker import GREEN, ColorRange, find_marker
+from batterie.input.vision.color_tracker import GREEN, ORANGE, ColorRange, find_marker
 
 IMAGE_SIZE = 200
 
@@ -80,3 +80,50 @@ def test_find_marker_works_with_a_custom_color_range():
     assert point is not None
     assert point.x == pytest.approx(50, abs=1)
     assert point.y == pytest.approx(60, abs=1)
+
+
+# --- Orange (main gauche, phase 04) ---
+
+# Teintes de peau types en HSV OpenCV (H, S, V) : même teinte qu'un orange, saturation bien
+# plus basse. Des valeurs synthétiques représentatives, pas des mesures : la vraie vérification
+# se fait sur ta main avec ``vision_debug.py --target hands``.
+SKIN_TONES_HSV = [
+    (6, 90, 230),
+    (8, 60, 180),
+    (10, 120, 210),
+    (12, 140, 190),
+    (14, 100, 160),
+    (16, 150, 200),
+    (18, 80, 220),
+    (20, 110, 130),
+]
+VIVID_ORANGE_HSV = (14, 230, 255)
+
+
+def test_find_marker_tracks_a_vivid_orange_blob():
+    frame = _frame_with_square(_bgr_for_hsv(*VIVID_ORANGE_HSV), center=(60, 70), half_size=12)
+    point = find_marker(frame, ORANGE)
+    assert point is not None
+    assert point.x == pytest.approx(60, abs=1)
+    assert point.y == pytest.approx(70, abs=1)
+
+
+@pytest.mark.parametrize("skin_hsv", SKIN_TONES_HSV)
+def test_orange_does_not_track_skin_tones(skin_hsv):
+    frame = _frame_with_square(_bgr_for_hsv(*skin_hsv), center=(100, 100), half_size=40)
+    assert find_marker(frame, ORANGE) is None
+
+
+def test_pale_orange_is_deliberately_not_tracked():
+    # Le prix de la parade contre la peau : un orange pâle n'est pas suivi (voir ORANGE).
+    frame = _frame_with_square(_bgr_for_hsv(14, 110, 255), center=(100, 100), half_size=20)
+    assert find_marker(frame, ORANGE) is None
+
+
+def test_orange_and_green_ranges_do_not_pick_up_each_other():
+    orange_frame = _frame_with_square(
+        _bgr_for_hsv(*VIVID_ORANGE_HSV), center=(50, 50), half_size=15
+    )
+    green_frame = _frame_with_square(_bgr_for_hsv(60, 200, 200), center=(50, 50), half_size=15)
+    assert find_marker(orange_frame, GREEN) is None
+    assert find_marker(green_frame, ORANGE) is None

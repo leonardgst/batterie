@@ -5,8 +5,15 @@ import numpy as np
 import pytest
 
 from batterie.core.events import Source
-from batterie.input.vision.color_tracker import GREEN
-from batterie.input.vision.process import VisionSample, run_vision_process, track_and_detect
+from batterie.input.vision.color_tracker import GREEN, ORANGE
+from batterie.input.vision.process import (
+    MarkerSpec,
+    VisionSample,
+    run_markers_process,
+    run_vision_process,
+    track_and_detect,
+    track_markers,
+)
 
 IMAGE_SIZE = 200
 
@@ -161,3 +168,133 @@ def test_run_vision_process_forwards_the_detector_thresholds():
 
     assert len(queue.items) == 3
     assert all(sample.hit_event is None for sample in queue.items)
+
+
+# --- Deux marqueurs (phase 04) ---
+
+ORANGE_BGR = _bgr_for_hsv(14, 230, 255)
+PLANE_Y = 100.0
+
+
+def _two_hand_frame(left_y: int | None, right_y: int | None) -> np.ndarray:
+    """Image 200x200 : carré orange à gauche (x=50), carré vert à droite (x=150)."""
+    frame = np.zeros((IMAGE_SIZE, IMAGE_SIZE, 3), dtype=np.uint8)
+    if left_y is not None:
+        frame[left_y - 10 : left_y + 10, 40:60] = ORANGE_BGR
+    if right_y is not None:
+        frame[right_y - 10 : right_y + 10, 140:160] = GREEN_BGR
+    return frame
+
+
+def _hand_specs() -> list[MarkerSpec]:
+    return [
+        MarkerSpec("left", ORANGE, PLANE_Y, element_id="snare"),
+        MarkerSpec("right", GREEN, PLANE_Y, element_id="ride"),
+    ]
+
+
+def test_track_markers_reports_each_marker_separately():
+    frames = [_two_hand_frame(60, 150)]
+    [sample] = track_markers(iter(frames), _hand_specs(), now_ns=_FakeClock())
+
+    assert set(sample.markers) == {"left", "right"}
+    left, right = sample.markers["left"], sample.markers["right"]
+    assert left.point is not None and left.point.x == pytest.approx(50, abs=1)
+    assert left.point.y == pytest.approx(60, abs=1)
+    assert right.point is not None and right.point.x == pytest.approx(150, abs=1)
+    assert right.point.y == pytest.approx(150, abs=1)
+
+
+def test_a_hand_out_of_view_does_not_affect_the_other():
+    frames = [_two_hand_frame(60, None), _two_hand_frame(70, None)]
+    samples = list(track_markers(iter(frames), _hand_specs(), now_ns=_FakeClock()))
+
+    assert samples[1].markers["right"].point is None
+    assert samples[1].markers["left"].point is not None
+    assert samples[1].markers["left"].velocity_px_per_s == pytest.approx(500.0, rel=0.05)
+
+
+def test_each_hand_hits_independently_with_its_own_element():
+    # La main gauche franchit le plan (100) entre la 2e et la 3e image, la droite entre
+    # la 4e et la 5e : deux coups, aux bons éléments, à des images différentes.
+    frames = [
+        _two_hand_frame(50, 50),
+        _two_hand_frame(70, 50),
+        _two_hand_frame(150, 50),
+        _two_hand_frame(150, 70),
+        _two_hand_frame(150, 150),
+    ]
+    samples = list(track_markers(iter(frames), _hand_specs(), now_ns=_FakeClock()))
+
+    hits = [(i, e.element_id) for i, s in enumerate(samples) for e in s.hit_events]
+    assert hits == [(2, "snare"), (4, "ride")]
+
+
+def test_a_hit_on_one_hand_does_not_start_the_other_hands_debounce():
+    # Les deux mains frappent à la même image : les deux coups sont comptés, l'anti-rebond
+    # est propre à chaque main.
+    frames = [
+        _two_hand_frame(50, 50),
+        _two_hand_frame(70, 70),
+        _two_hand_frame(150, 150),
+    ]
+    *_, last = track_markers(iter(frames), _hand_specs(), now_ns=_FakeClock())
+    assert len(last.hit_events) == 2
+
+
+def test_each_hand_keeps_its_own_thresholds():
+    specs = [
+        MarkerSpec("left", ORANGE, PLANE_Y, min_speed_px_per_s=1e12),  # n'atteindra jamais
+        MarkerSpec("right", GREEN, PLANE_Y),
+    ]
+    frames = [_two_hand_frame(50, 50), _two_hand_frame(70, 70), _two_hand_frame(150, 150)]
+    samples = list(track_markers(iter(frames), specs, now_ns=_FakeClock()))
+    assert all(s.markers["left"].hit_event is None for s in samples)
+    assert samples[2].markers["right"].hit_event is not None
+
+
+def test_mirror_puts_the_left_hand_on_the_left_of_the_preview():
+    # Image non retournée : l'orange est à gauche du carré vert. Le miroir inverse l'ordre.
+    frame = _two_hand_frame(60, 150)
+    specs = _hand_specs()
+    [plain] = track_markers(iter([frame]), specs, now_ns=_FakeClock())
+    [mirrored] = track_markers(iter([frame]), specs, mirror=True, now_ns=_FakeClock())
+
+    assert plain.markers["left"].point.x < plain.markers["right"].point.x
+    assert mirrored.markers["left"].point.x > mirrored.markers["right"].point.x
+    assert mirrored.markers["left"].point.x == pytest.approx(IMAGE_SIZE - 1 - 50, abs=1)
+
+
+def test_mirror_also_flips_the_preview_so_it_matches_the_tracked_points():
+    frame = _two_hand_frame(60, 150)
+    [sample] = track_markers(
+        iter([frame]), _hand_specs(), mirror=True, send_frames=True, now_ns=_FakeClock()
+    )
+    assert np.array_equal(sample.frame_preview, frame[:, ::-1])
+
+
+def test_track_markers_rejects_an_empty_or_duplicated_marker_list():
+    with pytest.raises(ValueError):
+        list(track_markers(iter([]), [], now_ns=_FakeClock()))
+    twin = [MarkerSpec("a", GREEN, PLANE_Y), MarkerSpec("a", ORANGE, PLANE_Y)]
+    with pytest.raises(ValueError, match="double"):
+        list(track_markers(iter([]), twin, now_ns=_FakeClock()))
+
+
+def test_single_marker_shortcuts_still_expose_the_first_marker():
+    frames = [_frame_at(50), _frame_at(70)]
+    samples = list(track_and_detect(iter(frames), GREEN, 1000.0, now_ns=_FakeClock()))
+    assert set(samples[0].markers) == {"marker"}
+    assert samples[1].point is samples[1].markers["marker"].point
+    assert samples[1].velocity_px_per_s == samples[1].markers["marker"].velocity_px_per_s
+
+
+def test_run_markers_process_pushes_every_sample_with_both_hands():
+    frames = [_two_hand_frame(50, 50), _two_hand_frame(70, 70), _two_hand_frame(150, 150)]
+    queue = _FakeQueue()
+
+    run_markers_process(queue, _hand_specs(), frames=iter(frames))
+
+    assert len(queue.items) == 3
+    assert set(queue.items[0].markers) == {"left", "right"}
+    assert sum(len(sample.hit_events) for sample in queue.items) == 2

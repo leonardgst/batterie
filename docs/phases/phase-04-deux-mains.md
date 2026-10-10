@@ -32,10 +32,10 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 ## Livrables
 
 **PR 1 — Deux mains : suivi orange et vert** (`feat/vision-two-hands`)
-- [ ] `input/vision/color_tracker.py` : plage `ORANGE` (vive, non calibrée) ; `find_marker` inchangé
-- [ ] `input/vision/process.py` : un marqueur et un détecteur de coup **par main** (anti-rebond propre à chaque main), `VisionSample` porte les points et les coups par main ; image **retournée en miroir** pour que ta main gauche apparaisse à gauche, comme sur le kit
-- [ ] `tools/vision_debug.py --target hands` : deux points suivis (orange, vert), vitesse et compteur de coups par main
-- [ ] Tests : images synthétiques à deux marqueurs, coups indépendants par main, miroir, et teintes de peau synthétiques **non** suivies par l'orange
+- [x] `input/vision/color_tracker.py` : plage `ORANGE` (vive, non calibrée) ; `find_marker` inchangé
+- [x] `input/vision/process.py` : un marqueur et un détecteur de coup **par main** (anti-rebond propre à chaque main), `VisionSample` porte les points et les coups par main ; image **retournée en miroir** pour que ta main gauche apparaisse à gauche, comme sur le kit
+- [x] `tools/vision_debug.py --target hands` : deux points suivis (orange, vert), vitesse et compteur de coups par main
+- [x] Tests : images synthétiques à deux marqueurs, coups indépendants par main, miroir, et teintes de peau synthétiques **non** suivies par l'orange
 - [ ] Nécessite ta webcam : vérifier que l'orange suit ton embout sans s'accrocher à ta main, à ton visage ni à ton fond
 
 **PR 2 — Zones, attribution à l'élément et anti-double-coup** (`feat/vision-zones`) — logique pure
@@ -101,7 +101,8 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 
 ## Écarts par rapport au plan
 
-_Aucun pour l'instant._
+- **PR 1 — `VisionSample` change de forme.** Il porte un échantillon par embout (`markers`) au lieu d'un seul point : c'est le minimum pour suivre deux mains, et les raccourcis `point`, `velocity_px_per_s` et `hit_event` (premier embout) gardent la baguette et le pied inchangés. Dans les outils, `TargetPreset` regroupe maintenant un ou plusieurs `MarkerPreset` ; les deux mains portent le même élément (`snare`) jusqu'aux zones de la PR 2.
+- **PR 1 — l'orange est réglé par la saturation.** Teinte de l'orange et de la peau confondues, c'est une saturation minimale élevée (160) qui les sépare ; un orange pâle n'est donc volontairement pas suivi. Valeurs de départ, non calibrées, vérifiées seulement sur des teintes de peau synthétiques.
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 

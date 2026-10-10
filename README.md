@@ -111,8 +111,9 @@ uv run python tools/vision_measure.py    # séance mesurée : 50 coups à 80 BPM
 
 Les deux outils suivent par défaut la baguette (`--target stick`, caisse claire).
 `--target foot` suit la pointe du pied (grosse caisse), pour tester la webcam intégrée
-posée au sol ; ce préréglage n'est pas calibré. Pour voir le déroulé sans caméra :
-`uv run python tools/vision_measure.py --simulate`.
+posée au sol ; ce préréglage n'est pas calibré. `--target hands` suit les deux mains
+(embout orange à gauche, vert à droite, image en miroir) : phase 04, aussi non calibré.
+Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --simulate`.
 Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
 [pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 
