@@ -101,16 +101,20 @@ uv run python tools/vision_debug.py      # aperçu caméra, point suivi, plan de
 uv run python tools/vision_measure.py    # séance mesurée : 50 coups à 80 BPM
 ```
 
-1. **Calibrer** avec `vision_debug.py` : règle la couleur de l'embout (`COLOR_RANGE`) et
-   la hauteur du plan de frappe (`STRIKE_PLANE_Y`) en haut du fichier, puis relance,
-   jusqu'à ce que chaque coup soit compté une fois.
+1. **Calibrer** avec `vision_debug.py` : règle la couleur de l'embout et la hauteur du
+   plan de frappe dans le préréglage de la cible (`STICK` ou `FOOT`, en haut du fichier),
+   puis relance, jusqu'à ce que chaque coup soit compté une fois.
 2. **Mesurer** avec `vision_measure.py` : touche K pour une séance de référence à la
    barre d'espace, touche V pour une séance à la baguette. Un métronome donne 4 clics de
    décompte puis 50 clics ; un coup par clic. À la fin : coups détectés, faux coups,
    images/s réelles, temps de traitement, et retard de la caméra par rapport au clavier.
 
-Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --simulate`.
-Protocole complet : [phase 03](docs/phases/phase-03-vision-poc.md#protocole-de-mesure).
+Les deux outils suivent par défaut la baguette (`--target stick`, caisse claire).
+`--target foot` suit la pointe du pied (grosse caisse), pour tester la webcam intégrée
+posée au sol ; ce préréglage n'est pas calibré. Pour voir le déroulé sans caméra :
+`uv run python tools/vision_measure.py --simulate`.
+Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
+[pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 
 ## Documentation
 

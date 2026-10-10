@@ -23,7 +23,11 @@ import numpy as np
 
 from batterie.core.events import HitEvent, Source
 from batterie.input.vision.color_tracker import ColorRange, TrackedPoint, find_marker
-from batterie.input.vision.strike_detector import StrikeDetector
+from batterie.input.vision.strike_detector import (
+    DEFAULT_MIN_SPEED_PX_PER_S,
+    DEFAULT_REFRACTORY_S,
+    StrikeDetector,
+)
 
 WORKING_WIDTH = 320
 
@@ -71,6 +75,8 @@ def track_and_detect(
     *,
     element_id: str = "snare",
     detector: StrikeDetector | None = None,
+    min_speed_px_per_s: float = DEFAULT_MIN_SPEED_PX_PER_S,
+    refractory_s: float = DEFAULT_REFRACTORY_S,
     send_frames: bool = False,
     working_width: int | None = WORKING_WIDTH,
     now_ns: Callable[[], int] = time.perf_counter_ns,
@@ -81,8 +87,16 @@ def track_and_detect(
     détection de coup et l'aperçu partagent ensuite le même repère de pixels, donc
     ``strike_plane_y`` et la position reçue se correspondent toujours directement à
     l'écran, quelle que soit la résolution native de la caméra.
+
+    ``min_speed_px_per_s`` et ``refractory_s`` règlent le détecteur de coup (ils
+    servent à le construire, et sont ignorés si ``detector`` est fourni) : une baguette
+    et un pied n'ont pas la même amplitude ni la même vitesse de geste.
     """
-    detector = detector or StrikeDetector(strike_plane_y=strike_plane_y)
+    detector = detector or StrikeDetector(
+        strike_plane_y=strike_plane_y,
+        min_speed_px_per_s=min_speed_px_per_s,
+        refractory_s=refractory_s,
+    )
     last_point: TrackedPoint | None = None
     last_t_ns: int | None = None
     last_loop_ns: int | None = None
@@ -133,6 +147,8 @@ def run_vision_process(
     strike_plane_y: float,
     *,
     element_id: str = "snare",
+    min_speed_px_per_s: float = DEFAULT_MIN_SPEED_PX_PER_S,
+    refractory_s: float = DEFAULT_REFRACTORY_S,
     send_frames: bool = False,
     frames: Iterator[np.ndarray] | None = None,
 ) -> None:
@@ -144,7 +160,13 @@ def run_vision_process(
     """
     frame_iter = frames if frames is not None else camera_frames()
     samples = track_and_detect(
-        frame_iter, color_range, strike_plane_y, element_id=element_id, send_frames=send_frames
+        frame_iter,
+        color_range,
+        strike_plane_y,
+        element_id=element_id,
+        min_speed_px_per_s=min_speed_px_per_s,
+        refractory_s=refractory_s,
+        send_frames=send_frames,
     )
     for sample in samples:
         queue.put(sample)

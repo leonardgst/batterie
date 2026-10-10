@@ -10,13 +10,16 @@ Un métronome donne 4 clics de décompte puis 50 clics : un coup par clic. Deux 
   la caméra par rapport au clavier, sans aucun matériel de mesure.
 
 Aucun son n'est joué sur tes coups, exprès : tu te calerais dessus et le retard
-deviendrait invisible dans la mesure. La calibration (couleur de l'embout, plan de
-frappe) est celle de ``tools/vision_debug.py`` : règle-la là-bas d'abord. Le protocole
-complet est dans ``docs/phases/phase-03-vision-poc.md``. Aucune image n'est
-enregistrée (cadrage R9).
+deviendrait invisible dans la mesure. Le décompte (clics aigus) et le métronome (clics
+graves) sont audibles : une séance se joue sans regarder l'écran (ordinateur au sol,
+pour la cible ``foot``) ; le résultat s'affiche à la fin et dans le terminal. La
+calibration (couleur du marqueur, plan de frappe, seuils) est celle du préréglage de la
+cible dans ``tools/vision_debug.py`` : règle-la là-bas d'abord. Le protocole complet est
+dans ``docs/phases/phase-03-vision-poc.md``. Aucune image n'est enregistrée (cadrage R9).
 
-Usage : ``uv run python tools/vision_measure.py``
-Sans caméra, pour voir le déroulé avec un embout fictif :
+Usage : ``uv run python tools/vision_measure.py`` (baguette, par défaut)
+        ``uv run python tools/vision_measure.py --target foot`` (pied)
+Sans caméra, pour voir le déroulé avec un marqueur fictif :
 ``uv run python tools/vision_measure.py --simulate``
 """
 
@@ -46,7 +49,7 @@ from batterie.input.vision.measure import (
     format_report,
 )
 from batterie.input.vision.process import WORKING_WIDTH, VisionSample, run_vision_process
-from vision_debug import COLOR_RANGE, ELEMENT_ID, STRIKE_PLANE_Y
+from vision_debug import STICK, TARGETS, TargetPreset, add_target_argument
 
 PLAN = SessionPlan(bpm=80.0, hit_count=50, count_in_beats=4)
 LEAD_IN_S = 1.0  # délai entre Entrée et le premier clic de décompte
@@ -132,6 +135,8 @@ def _run_simulated_vision(
     strike_plane_y: float,
     element_id: str,
     beat_interval_s: float,
+    min_speed_px_per_s: float,
+    refractory_s: float,
 ) -> None:
     """Point d'entrée du processus vision en mode ``--simulate`` (aucune caméra ouverte)."""
     run_vision_process(
@@ -139,6 +144,8 @@ def _run_simulated_vision(
         color_range,
         strike_plane_y,
         element_id=element_id,
+        min_speed_px_per_s=min_speed_px_per_s,
+        refractory_s=refractory_s,
         send_frames=True,
         frames=_simulated_frames(color_range, strike_plane_y, beat_interval_s),
     )
@@ -147,7 +154,8 @@ def _run_simulated_vision(
 class MeasureApp:
     """État de l'outil : menu, séance en cours, résultats. Appelée à chaque tour de boucle."""
 
-    def __init__(self, *, simulate: bool = False) -> None:
+    def __init__(self, target: TargetPreset = STICK, *, simulate: bool = False) -> None:
+        self.target = target
         self.simulate = simulate
         self.phase = Phase.MENU
         self.source = Source.VISION
@@ -174,21 +182,29 @@ class MeasureApp:
 
     def _start_camera(self) -> None:
         self._queue = mp.Queue(maxsize=64)
+        preset = self.target
         if self.simulate:
-            target = _run_simulated_vision
+            entry_point = _run_simulated_vision
             args: tuple = (
                 self._queue,
-                COLOR_RANGE,
-                STRIKE_PLANE_Y,
-                ELEMENT_ID,
+                preset.color_range,
+                preset.strike_plane_y,
+                preset.element_id,
                 PLAN.beat_interval_s,
+                preset.min_speed_px_per_s,
+                preset.refractory_s,
             )
             kwargs: dict = {}
         else:
-            target = run_vision_process
-            args = (self._queue, COLOR_RANGE, STRIKE_PLANE_Y)
-            kwargs = {"element_id": ELEMENT_ID, "send_frames": True}
-        self._process = mp.Process(target=target, args=args, kwargs=kwargs, daemon=True)
+            entry_point = run_vision_process
+            args = (self._queue, preset.color_range, preset.strike_plane_y)
+            kwargs = {
+                "element_id": preset.element_id,
+                "min_speed_px_per_s": preset.min_speed_px_per_s,
+                "refractory_s": preset.refractory_s,
+                "send_frames": True,
+            }
+        self._process = mp.Process(target=entry_point, args=args, kwargs=kwargs, daemon=True)
         self._process.start()
 
     def _stop_camera(self) -> None:
@@ -325,6 +341,9 @@ class MeasureApp:
     def summary_lines(self) -> list[str]:
         """Résultats des séances terminées (caméra comparée au clavier s'il a été fait)."""
         lines: list[str] = []
+        if self.results:
+            lines.append(f"Cible : {self.target.label} ({self.target.element_id})")
+            lines.append("")
         for source in (Source.VISION, Source.KEYBOARD):
             result = self.results.get(source)
             if result is None:
@@ -362,7 +381,7 @@ class MeasureApp:
             return
         surface = _frame_to_surface(self._latest.frame_preview)
         screen.blit(surface, PREVIEW_ORIGIN)
-        plane_y = PREVIEW_ORIGIN[1] + int(STRIKE_PLANE_Y)
+        plane_y = PREVIEW_ORIGIN[1] + int(self.target.strike_plane_y)
         plane_end_x = PREVIEW_ORIGIN[0] + surface.get_width()
         pygame.draw.line(screen, PLANE_COLOR, (PREVIEW_ORIGIN[0], plane_y), (plane_end_x, plane_y))
         if self._latest.point is not None:
@@ -393,7 +412,7 @@ class MeasureApp:
         if uses_camera:
             self._draw_preview(screen, now_ns)
 
-        title = f"Mesure vision — {PLAN.hit_count} coups à {PLAN.bpm:.0f} BPM"
+        title = f"Mesure {self.target.label} — {PLAN.hit_count} coups à {PLAN.bpm:.0f} BPM"
         if self.simulate:
             title += " (simulation)"
         text_x = TEXT_X if uses_camera else PREVIEW_ORIGIN[0]
@@ -404,7 +423,7 @@ class MeasureApp:
             y = self._draw_lines(
                 screen,
                 [
-                    "V : séance caméra (baguette devant la webcam)",
+                    f"V : séance caméra ({self.target.label} filmé par la webcam)",
                     "K : séance clavier de référence (barre d'espace, sans caméra)",
                     "Échap : quitter",
                 ],
@@ -424,8 +443,8 @@ class MeasureApp:
                 tracked = self._latest is not None and self._latest.point is not None
                 lines = [
                     "Place-toi comme pour jouer. La ligne rouge est le plan",
-                    "de frappe : l'embout doit la traverser à chaque coup.",
-                    f"Embout : {'suivi (cercle jaune)' if tracked else 'non détecté'}",
+                    "de frappe : le marqueur doit la traverser à chaque coup.",
+                    f"Marqueur : {'suivi (cercle jaune)' if tracked else 'non détecté'}",
                 ]
             else:
                 lines = ["Tape la barre d'espace sur chaque clic, d'un doigt."]
@@ -465,13 +484,13 @@ class MeasureApp:
             self._draw_lines(screen, self.summary_lines(), (text_x, y + 24), font=self._small_font)
 
 
-def run(*, simulate: bool = False) -> None:
+def run(target: TargetPreset = STICK, *, simulate: bool = False) -> None:
     init_mixer()
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Batterie — mesure vision")
+    pygame.display.set_caption(f"Batterie — mesure vision ({target.label})")
 
-    app = MeasureApp(simulate=simulate)
+    app = MeasureApp(target, simulate=simulate)
     poll_clock = pygame.time.Clock()
     render_interval_s = 1.0 / TARGET_FPS
     next_render = time.perf_counter()
@@ -496,17 +515,24 @@ def run(*, simulate: bool = False) -> None:
         pygame.quit()
 
 
-def main() -> int:
-    # Les résultats contiennent « ≥ » et « − » : sortie en UTF-8 même redirigée vers un fichier.
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+def parse_arguments(argv: list[str] | None = None) -> tuple[TargetPreset, bool]:
+    """Lit la ligne de commande : renvoie le préréglage de la cible et le mode simulation."""
     parser = argparse.ArgumentParser(description="Séance de mesure vision (phase 03).")
+    add_target_argument(parser)
     parser.add_argument(
         "--simulate",
         action="store_true",
-        help="embout fictif à la place de la webcam (pour voir le déroulé sans caméra)",
+        help="marqueur fictif à la place de la webcam (pour voir le déroulé sans caméra)",
     )
-    arguments = parser.parse_args()
-    run(simulate=arguments.simulate)
+    arguments = parser.parse_args(argv)
+    return TARGETS[arguments.target], arguments.simulate
+
+
+def main(argv: list[str] | None = None) -> int:
+    # Les résultats contiennent « ≥ » et « − » : sortie en UTF-8 même redirigée vers un fichier.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    target, simulate = parse_arguments(argv)
+    run(target, simulate=simulate)
     return 0
 
 

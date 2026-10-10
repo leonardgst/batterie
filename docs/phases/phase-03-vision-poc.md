@@ -60,6 +60,15 @@ critère de fin (détection, latence, décision go/no-go).
 - [x] Protocole de mesure consigné dans cette page (comment mesurer, avec quoi) — voir « Protocole de mesure » ci-dessous
 - [x] ADR 0002 : décision go/no-go et, si « go », caractéristiques de caméra à viser pour la suite — **go, sans achat pour l'instant**, rempli avec tes résultats
 
+**PR 4 — Test du pied avec la webcam intégrée au sol** (`feat/vision-foot`) — informatif, ne bloque pas les critères de fin
+- [x] `--target stick|foot` (défaut `stick`) dans `tools/vision_debug.py` et `tools/vision_measure.py` : préréglages regroupés en haut de `vision_debug.py` (élément, couleur, plan de frappe, vitesse minimale, anti-rebond) ; préréglage pied non calibré, seuils estimés et justifiés en commentaire
+- [x] `input/vision/process.py` : vitesse minimale et anti-rebond transmis au détecteur de coup (`color_tracker.py` et `strike_detector.py` inchangés)
+- [x] Séance de `vision_measure.py` jouable sans regarder l'écran : déjà le cas (décompte aigu et métronome grave audibles, résultat affiché et imprimé à la fin) — rien changé
+- [x] Tests : trajectoires de pied synthétiques (faible amplitude, plus lentes), sélection du préréglage, transmission des seuils
+- [x] Protocole pied consigné dans cette page
+- [x] ADR 0002 : options de disposition des caméras et section « pied » à remplir
+- [ ] Nécessite ton ordinateur au sol et ta webcam : séance pied et chiffres relevés dans l'ADR 0002
+
 ## Critères de fin (Definition of Done)
 
 - [x] Tests au vert (CI Windows) pour la logique testable sans caméra
@@ -80,8 +89,8 @@ la couleur de l'embout dans le champ (vêtements compris).
 
 1. *Facultatif, sans caméra* — `uv run python tools/vision_measure.py --simulate` montre
    le déroulé avec un embout fictif. Utile pour découvrir l'écran avant la vraie mesure.
-2. **Calibrer** — `uv run python tools/vision_debug.py`. Ajuste `COLOR_RANGE` et
-   `STRIKE_PLANE_Y` en haut de ce fichier jusqu'à ce que : le cercle suive l'embout sans
+2. **Calibrer** — `uv run python tools/vision_debug.py`. Ajuste la couleur et
+   `strike_plane_y` du préréglage `STICK`, en haut de ce fichier, jusqu'à ce que : le cercle suive l'embout sans
    décrocher ; chaque coup ajoute 1 au compteur, et un seul ; remonter la baguette ou
    bouger sans frapper n'ajoute rien. La séance de mesure reprend automatiquement ces
    deux réglages. Note les valeurs retenues.
@@ -131,11 +140,78 @@ compenser plus tard (cadrage R7).
 latence geste → *son* (US7), qui ajoute au retard ci-dessus les ≈ 5 ms du moteur audio
 (ADR 0001).
 
+## Protocole de mesure — pied (test anticipé de la phase 05)
+
+Même outil, même séance de 50 coups à 80 BPM, avec `--target foot` : un coup de grosse
+caisse (`kick`) par clic grave, la pointe du pied qui se lève et retombe, talon au sol,
+comme sur une pédale. Informatif : ça ne conditionne pas la clôture de la phase 03, ça
+sert à choisir la disposition des caméras (ADR 0002, « Test du pied »).
+
+**Avec quoi (0 €)** : la webcam intégrée de l'ordinateur ; le ruban adhésif vert de la
+baguette, collé sur la **pointe de la chaussure droite**, un carré de 3 à 4 cm sur le
+dessus du bout (assez gros pour rester visible à 50–80 cm, mais pas plus : plus il est
+grand, plus son centre bouge quand le pied tourne) ; une chaussure de couleur neutre,
+sans rien de vert ; ton casque filaire.
+
+**Placement** :
+
+- l'ordinateur posé **au sol**, sur une surface plane et stable, à **50–80 cm devant
+  tes pieds** ; la webcam (en haut de l'écran) doit se trouver à **20–30 cm du sol** :
+  l'écran n'a pas besoin d'être grand ouvert, juste assez pour que la caméra voie ;
+- l'écran un peu **refermé** (incliné vers l'avant) pour que la caméra vise tes pieds et
+  non le plafond ; la pointe de ton pied droit doit rester dans l'image dans tout son
+  mouvement, le pied gauche hors de l'image ou au moins loin du marqueur ;
+- **éclairage** : lumière du plafond ou d'une lampe devant toi, jamais une fenêtre ou une
+  lampe derrière tes pieds (contre-jour) ; le sol doit être éclairé, pas dans l'ombre de
+  ton corps. Le sol sous le marqueur ne doit rien avoir de vert.
+
+**Étapes** (compte 20 à 30 minutes) :
+
+1. *Facultatif, sans caméra* — `uv run python tools/vision_measure.py --target foot --simulate`
+   montre le déroulé avec le préréglage pied.
+2. **Calibrer** — place l'ordinateur comme ci-dessus, puis
+   `uv run python tools/vision_debug.py --target foot`. Le préréglage `FOOT` est un point
+   de départ **non calibré** (voir ses commentaires dans `tools/vision_debug.py`) : régler
+   avant de mesurer. Frappe quelques coups et ajuste, dans le fichier, le plan de frappe
+   (la ligne rouge doit couper la trajectoire de la pointe vers le milieu de sa course),
+   la vitesse minimale (trop haute : coups ratés ; trop basse : coups en trop quand le
+   point tremble) et l'anti-rebond, jusqu'à : un seul coup compté par frappe, rien quand
+   tu lèves le pied sans le reposer ni quand tu changes d'appui. Note les valeurs
+   retenues.
+3. **Référence clavier** — `uv run python tools/vision_measure.py --target foot`, touche
+   K. Deux façons, de la meilleure à la plus simple : (i) un clavier USB posé au sol,
+   barre d'espace frappée **du pied** (même geste, même anticipation que la mesure
+   caméra, et c'est aussi un essai de l'option « pédales ») ; (ii) à défaut, la barre
+   d'espace du portable d'un doigt — le retard par rapport au clavier sera alors moins
+   fiable pour le pied, car le pied n'anticipe pas le clic comme un doigt. Dis-moi
+   laquelle tu as utilisée.
+4. **Séance pied (touche V), trois fois** — appuie sur V, vérifie que le marqueur est suivi
+   (cercle jaune), puis Entrée : l'outil laisse environ 4 secondes (1 seconde + 4 clics
+   aigus de décompte) pour reprendre position. Après, **tu peux ne plus regarder
+   l'écran** : un coup sur chacun des 50 clics graves. À la fin, l'écran de résultat
+   s'affiche et le même texte est imprimé dans le terminal.
+5. **Relever** (pour l'ADR 0002, section « Test du pied ») : coups détectés sur 50,
+   faux coups, part des images où le marqueur est vu, images/s réelles (elles peuvent
+   baisser quand la caméra regarde le sol, plus sombre), temps de traitement, retard par
+   rapport au clavier ; les valeurs du préréglage retenues à l'étape 2 ; la distance
+   ordinateur-pieds, la hauteur de la caméra, la lumière ; et deux mots sur ce qui
+   gêne (marqueur perdu quand le pied tourne, pied gauche qui entre dans l'image,
+   reflets sur le sol…). Colle le texte du terminal dans la conversation, je remplis
+   le tableau.
+
+**Lecture** : grille fixée dans l'ADR 0002 avant la mesure. Ce test ne mesure qu'une
+pointe de pied seule : il dit si le pied est suivable avec la webcam intégrée au sol,
+pas si le kit complet (pieds et mains en même temps) tient.
+
 ## Décisions prises (liens vers les ADR)
 
 - [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) — **accepté le 2026-10-10 : go, sans achat de caméra pour l'instant** ; l'achat d'une caméra 60 images/s devient conditionnel (lumière, retard geste → son, placement).
 
 ## Écarts par rapport au plan
+
+- **PR 4 — test du pied anticipé sur la phase 05 : informatif, ne bloque pas les critères de fin.** Le plan de la phase ne couvrait qu'une baguette ; on profite de la phase 03 pour tester aussi le pied avec la webcam intégrée au sol, avant tout achat, parce que la disposition des caméras choisie le 2026-10-10 (note du cadrage §7) réserve cette webcam aux pieds. Ajouté après la clôture documentaire de la phase (qui reste « Terminée », ses critères étant atteints) et avant la pose du tag `v0.3.0`. Les résultats alimentent l'ADR 0002 ; ils ne changent ni la décision « go » ni les critères de fin.
+- **PR 4 — préréglages de cible dans `tools/vision_debug.py` au lieu de constantes séparées.** `COLOR_RANGE`, `STRIKE_PLANE_Y` et `ELEMENT_ID` sont remplacés par deux préréglages (`STICK`, `FOOT`) regroupant en plus la vitesse minimale et l'anti-rebond, qui n'étaient pas réglables depuis l'outil (`input/vision/process.py` ne les transmettait pas). La calibration reste « éditer le fichier puis relancer », au même endroit.
+- **PR 4 — préréglage pied non calibré.** Plan de frappe (100 px), vitesse minimale (80 px/s) et anti-rebond (0,20 s) sont des estimations d'ordre de grandeur (mouvement du pied plus court et plus lent qu'une baguette), pas des mesures ; justifiées en commentaire dans `tools/vision_debug.py`. À régler avec `vision_debug.py --target foot` avant la mesure.
 
 - **PR 3 — séance clavier de référence ajoutée.** Le plan ne prévoyait que les statistiques de latence de *traitement*, qui ne suffisent pas au critère de fin « latence geste → détection mesurée » : le temps de calcul n'est qu'une petite partie du retard, le reste (attente de l'image, retard interne de la caméra) ne se voit pas depuis le programme. L'outil propose donc la même séance au clavier, et la différence entre les deux donne le retard de la caméra sans matériel de mesure (détail et limites dans « Protocole de mesure »).
 - **PR 3 — mode `--simulate`.** Un embout fictif remplace la webcam. Il me permet de vérifier l'outil de bout en bout sans ouvrir ta caméra (R9), et te permet de voir le déroulé avant la vraie mesure. Ses chiffres ne disent rien de ta webcam.
