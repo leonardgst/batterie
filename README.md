@@ -2,7 +2,7 @@
 
 Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui défilent, puis jouez « dans le vide » devant une webcam avec des baguettes à embout coloré.
 
-> **Statut** : phase 01 (batterie au clavier) terminée — `v0.1.0`. Phase 02 (partitions) en cours.
+> **Statut** : phases 01 (batterie au clavier, `v0.1.0`) et 02 (partitions, `v0.2.0`) terminées. Phase 03 (vision, preuve de concept) en cours.
 > Voir [docs/00-cadrage.md](docs/00-cadrage.md) et [docs/phases/](docs/phases/).
 
 ## Feuille de route
@@ -10,8 +10,8 @@ Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui d�
 | Version | Contenu | Statut |
 | --- | --- | --- |
 | V1 | Batterie au clavier | Terminé (`v0.1.0`) |
-| V2 | Partitions qui défilent | En cours |
-| V3 | Jeu à la caméra (mains, puis pieds) | À faire |
+| V2 | Partitions qui défilent | Terminé (`v0.2.0`) |
+| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept en cours (une baguette, la caisse claire) |
 
 ## Installation (Windows)
 
@@ -87,6 +87,28 @@ uv run python tools/keytest.py
 
 Maintiens plusieurs touches du kit à la fois : une touche qui reste grise malgré
 l'appui n'est pas reçue par Windows dans cette combinaison.
+
+## Vision : preuve de concept (phase 03)
+
+La V3 remplacera le clavier par des baguettes à embout coloré filmées par webcam. Pour
+l'instant, deux outils servent à vérifier que c'est assez rapide et fiable, avec une
+seule baguette et la webcam déjà présente. Aucune image n'est enregistrée.
+
+```powershell
+uv run python tools/vision_debug.py      # aperçu caméra, point suivi, plan de frappe : pour calibrer
+uv run python tools/vision_measure.py    # séance mesurée : 50 coups à 80 BPM
+```
+
+1. **Calibrer** avec `vision_debug.py` : règle la couleur de l'embout (`COLOR_RANGE`) et
+   la hauteur du plan de frappe (`STRIKE_PLANE_Y`) en haut du fichier, puis relance,
+   jusqu'à ce que chaque coup soit compté une fois.
+2. **Mesurer** avec `vision_measure.py` : touche K pour une séance de référence à la
+   barre d'espace, touche V pour une séance à la baguette. Un métronome donne 4 clics de
+   décompte puis 50 clics ; un coup par clic. À la fin : coups détectés, faux coups,
+   images/s réelles, temps de traitement, et retard de la caméra par rapport au clavier.
+
+Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --simulate`.
+Protocole complet : [phase 03](docs/phases/phase-03-vision-poc.md#protocole-de-mesure).
 
 ## Documentation
 

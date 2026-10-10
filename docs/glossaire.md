@@ -32,6 +32,8 @@
 | UVC | Norme des webcams qui fonctionnent sans pilote |
 | Images/s | Fréquence de capture d'une caméra (30 ou 60 en général) |
 | HSV | Espace de couleur utilisé pour repérer les embouts colorés |
+| Plan de frappe | Ligne horizontale dans l'image : un coup est détecté quand l'embout la traverse vers le bas assez vite |
+| Go/no-go | Décision de continuer (« go ») ou non une approche, prise sur des mesures avant d'y investir davantage |
 | ADR | *Architecture Decision Record* : une décision technique par fichier |
 | PR | *Pull Request* : demande de fusion d'une branche, relue avant d'entrer dans `main` |
 | CI | Intégration continue : tests lancés automatiquement à chaque PR |
