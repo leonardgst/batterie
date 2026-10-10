@@ -35,4 +35,4 @@ _À documenter en phase 01 : fréquence de lecture des entrées, rendu, horloge 
 ## Décisions
 
 - [ADR 0001 — Choix du moteur audio](adr/0001-choix-du-moteur-audio.md)
-- [ADR 0002 — Vision : go/no-go et choix de caméra](adr/0002-vision-go-no-go-et-camera.md) (proposé, en attente des mesures)
+- [ADR 0002 — Vision : go/no-go et choix de caméra](adr/0002-vision-go-no-go-et-camera.md) (accepté : go, sans achat de caméra pour l'instant)

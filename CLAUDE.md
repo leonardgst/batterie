@@ -72,11 +72,12 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 ## 8. Phase en cours
 
-**Phase 03 — Vision : preuve de concept** → [docs/phases/phase-03-vision-poc.md](docs/phases/phase-03-vision-poc.md)
-Prérequis avant d'y toucher : demander le matériel de l'utilisateur (processeur, mémoire,
-carte graphique, webcams) — voir la section « Prérequis » du document de phase.
+**Phase 04 — Vision : deux mains, kit complet (V3.1)** → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
+Prérequis avant d'y toucher : cadrer la phase en détail (découpage en PR) et demander à
+l'utilisateur les deux couleurs d'embout qu'il compte utiliser — voir le document de phase.
 
 Phases terminées :
+- Phase 03 — Vision : preuve de concept (V3.0) terminée le 2026-10-10, tag `v0.3.0`, décision go sans achat de caméra (ADR 0002) → [docs/phases/phase-03-vision-poc.md](docs/phases/phase-03-vision-poc.md)
 - Phase 02 — Partitions (V2) terminée le 2026-10-09, tag `v0.2.0` → [docs/phases/phase-02-partitions.md](docs/phases/phase-02-partitions.md)
 - Phase 01 — Batterie au clavier (V1, MVP) terminée le 2026-10-09, tag `v0.1.0` → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)
 
@@ -88,5 +89,5 @@ Phases terminées :
 - Ne pas juger la latence avec un casque Bluetooth.
 - Tests et CI : `SDL_VIDEODRIVER=dummy` et `SDL_AUDIODRIVER=dummy`.
 - Vision (V3) : traitement d'image dans un **processus** séparé (`multiprocessing`), jamais dans le processus audio/rendu.
-- Matériel de l'utilisateur non renseigné (processeur, mémoire, carte graphique, webcams) : le demander avant la phase 03.
+- Matériel de l'utilisateur : renseigné (cadrage §6.1) — Intel Core i7-1255U, 16 Go, Iris Xe intégrée, webcam intégrée seulement ; pas d'achat de caméra tant que l'ADR 0002 ne le justifie pas.
 - Sous Windows, Claude Code dispose de deux shells (Git Bash et PowerShell) : les permissions sont déclarées pour les deux dans `.claude/settings.json`. Préférer Bash pour les commandes du projet.
