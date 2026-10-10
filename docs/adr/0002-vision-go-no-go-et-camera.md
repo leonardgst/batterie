@@ -2,7 +2,7 @@
 
 | Statut | Date | Phase |
 | --- | --- | --- |
-| Proposé — grille de lecture fixée, en attente des mesures de l'utilisateur | 2026-10-10 | 03 |
+| Accepté — décision prise sur les mesures de l'utilisateur | 2026-10-10 | 03 |
 
 ## Contexte
 
@@ -40,25 +40,44 @@ No-go (option 4) seulement si, après correction de la calibration et de l'écla
 
 ## Mesures
 
-_À remplir avec les résultats de l'utilisateur._
+Séances faites par l'utilisateur avec `tools/vision_measure.py` (une séance clavier de référence, des séances caméra), puis rapportées à la fin de la phase. Les valeurs sont celles qu'il a lues à l'écran ; quand il n'a donné qu'une tranche, c'est la tranche qui est consignée, pas une valeur inventée. Le détail séance par séance n'a pas été relevé : l'utilisateur a jugé inutile de transmettre le texte du terminal.
 
-Conditions : lumière — … ; embout — … ; `COLOR_RANGE` — … ; `STRIKE_PLANE_Y` — … ; sortie audio — casque filaire.
+Conditions : embout — brosse à dents verte fixée à la baguette ; `COLOR_RANGE` — `GREEN` et `STRIKE_PLANE_Y` — 150, valeurs par défaut du dépôt ; lumière — non précisée ; sortie audio — casque filaire ; webcam — intégrée du portable.
 
-| Date | Séance | Coups détectés | Faux coups | Écart coup − clic (médiane, écart-type) | Embout visible | Images/s réelles | Traitement (médiane / p95 / max) | Retard logiciel estimé | Retard par rapport au clavier |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | Clavier (référence) | | | | — | — | — | — | — |
-| | Caméra 1 | | | | | | | | |
-| | Caméra 2 | | | | | | | | |
-| | Caméra 3 | | | | | | | | |
+| Ce qu'on regarde | Seuil de la grille | Mesuré | Verdict |
+| --- | --- | --- | --- |
+| Coups détectés (la moins bonne séance caméra) | ≥ 45 / 50 | 48 à 50 / 50 | Atteint, au niveau de la cible finale de la V3 (95 %) |
+| Faux coups | ≤ 2 par séance | 0 | Atteint |
+| Retard par rapport au clavier | ≤ 55 ms | ≤ 55 ms (tranche choisie, valeur exacte non relevée) | Atteint |
+| Images/s réelles | ≥ 25 | 31,2 | Atteint ; cadence nominale de la webcam (30), le traitement ne la ralentit pas |
+| Traitement par image | médiane ≤ 5 ms | non relevé | Non vérifié directement ; une cadence de 31,2 images/s montre que le traitement tient dans l'intervalle entre deux images |
+
+Au-delà des chiffres, l'utilisateur rapporte que l'embout est suivi sans décrocher, que le passage sur la ligne du plan de frappe est détecté de façon fiable et que le compteur de coups est juste.
 
 ## Décision
 
-_En attente des mesures._
+**Go, sans achat de caméra pour l'instant (option 2).** Le suivi de couleur sur CPU avec la webcam intégrée atteint le critère de fin de la phase 03 (≥ 90 % de 50 coups à 80 BPM) avec une marge, sans aucun faux coup, et la grille de lecture classe le retard dans la tranche « US7 déjà tenue avec la webcam intégrée ».
+
+Réserves, pour ne pas surestimer ce résultat :
+
+- une baguette, un seul élément, un seul embout : la phase 04 ajoute la deuxième main, plusieurs zones et plusieurs éléments, où les risques de confusion de couleur et de faux coups sont plus grands ;
+- US7 demande le retard geste → *son* ≤ 60 ms : retard de détection ≤ 55 ms + environ 5 ms de moteur audio (ADR 0001) donnent au plus 60 ms, donc au ras du critère. À confirmer en phase 04, avec le son réellement joué ;
+- le critère de la phase (90 % sur 50 coups à 80 BPM) est plus léger que US7 (95 % sur 100 coups à 90 BPM) : la tenue à 90 BPM et en croches n'est pas encore mesurée ;
+- la lumière de la séance n'a pas été consignée : une pièce moins bien éclairée peut faire chuter la cadence de la webcam et le taux de détection.
 
 ## Caméra à viser pour la suite
 
-_À confirmer ou corriger avec les mesures._ Point de départ, tiré du cadrage §7 : une seule webcam UVC (sans pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ d'environ 80–90°, à moins de 45 €. Les mesures diront si la cadence est bien le facteur limitant (images/s réelles, retard par rapport au clavier) et si l'exposition manuelle est indispensable (cadence qui chute quand la lumière baisse).
+**Ne rien acheter maintenant.** La webcam intégrée tient le critère de la phase 03, donc l'achat prévu par le cadrage (§7, phase 04) n'est pas déclenché par un manque de performance. Il le sera si l'un de ces points se présente, avec la caméra décrite ci-dessous :
+
+- la cadence ou le taux de détection chutent quand la lumière baisse ;
+- le retard geste → son dépasse 60 ms avec le son réel en phase 04 ;
+- le placement devient le problème : la webcam du portable est fixée à l'écran, alors que le cadrage recommande une caméra en hauteur face au batteur (~1,8 m, inclinée vers le bas), et la phase 05 (pieds) demandera un second point de vue.
+
+Caractéristiques à chercher le moment venu (cadrage §7, inchangées) : une webcam UVC (sans pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ d'environ 80–90°, sous 45 € (prix à vérifier à l'achat ; Logitech C922 en exemple). Cette caméra rapprocherait la cible de 40 ms (16 ms par image au lieu de 33 ms).
 
 ## Conséquences
 
-_À écrire avec la décision._ Déjà acquis quelle que soit l'issue : `tools/vision_measure.py` et son protocole restent l'outil de référence pour comparer une future caméra à la webcam intégrée, dans les mêmes conditions.
+- La phase 04 (V3.1, deux mains) peut démarrer avec la webcam intégrée ; son livrable « achat de la caméra 60 images/s » devient conditionnel aux trois points ci-dessus.
+- Le suivi de couleur avec embout vert reste la méthode ; MediaPipe n'est pas nécessaire à ce stade. Aucune dépendance ajoutée.
+- `tools/vision_measure.py` et son protocole servent de référence pour comparer une future caméra, ou une future version du suivi, dans les mêmes conditions.
+- Piste pour plus tard : l'outil affiche ses résultats sans les enregistrer ; en relever une trace dans un fichier rendrait les prochaines décisions plus précises que des valeurs lues et rapportées à la main.

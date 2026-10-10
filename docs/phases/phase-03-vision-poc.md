@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| En cours | 4 à 6 h de ton temps | — | v0.3.0 |
+| Terminée | 4 à 6 h de ton temps | 2026-10-10 | v0.3.0 |
 
 ## Objectif
 
@@ -53,20 +53,20 @@ critère de fin (détection, latence, décision go/no-go).
 **PR 2 — Processus caméra séparé et écran de débogage** (`feat/vision-capture`)
 - [x] `input/vision/process.py` : boucle caméra dans un `multiprocessing.Process`, transmet des `VisionSample` (position, vitesse, images/s, latence, éventuel `HitEvent`) par file inter-processus (cadrage §4.1) ; source d'image injectable pour tester la boucle sans caméra réelle
 - [x] `tools/vision_debug.py` : fenêtre de débogage — aperçu caméra, plan de frappe, point suivi, vitesse, images/s, latence de traitement, compteur de coups
-- [ ] Nécessite ta webcam : à essayer et ajuster par toi (plage de couleur HSV et position du plan de frappe à calibrer pour ton embout, ta lumière, ta caméra)
+- [x] Nécessite ta webcam : essayé par toi le 2026-10-10 avec une brosse à dents verte comme embout ; les réglages par défaut (`GREEN`, plan à 150 px) ont suffi, suivi et compteur de coups corrects
 
 **PR 3 — Protocole de mesure et décision go/no-go** (`feat/vision-measure`)
 - [x] `tools/vision_measure.py` : séance guidée de 50 coups, compte les coups détectés et les statistiques de latence de traitement (logique de comptage dans `input/vision/measure.py`, testée sans caméra)
 - [x] Protocole de mesure consigné dans cette page (comment mesurer, avec quoi) — voir « Protocole de mesure » ci-dessous
-- [ ] ADR 0002 : décision go/no-go et, si « go », caractéristiques de caméra à viser pour la suite — rempli avec tes résultats (fichier créé, grille de lecture posée avant la mesure, tableau de résultats vide en attendant tes chiffres)
+- [x] ADR 0002 : décision go/no-go et, si « go », caractéristiques de caméra à viser pour la suite — **go, sans achat pour l'instant**, rempli avec tes résultats
 
 ## Critères de fin (Definition of Done)
 
-- [ ] Tests au vert (CI Windows) pour la logique testable sans caméra
-- [ ] Documentation à jour (README, CHANGELOG, journal)
-- [ ] ≥ 90 % de coups détectés sur 50 coups à 80 BPM (mesuré, toi devant la caméra)
-- [ ] Latence geste → détection mesurée
-- [ ] Décision go/no-go et choix de caméra consignés dans un ADR
+- [x] Tests au vert (CI Windows) pour la logique testable sans caméra
+- [x] Documentation à jour (README, CHANGELOG, journal)
+- [x] ≥ 90 % de coups détectés sur 50 coups à 80 BPM (mesuré, toi devant la caméra) — 48 à 50 sur 50 pour la moins bonne séance caméra, 0 faux coup
+- [x] Latence geste → détection mesurée — ≤ 55 ms par rapport au clavier (tranche retenue, valeur exacte non relevée) ; 31,2 images/s réelles
+- [x] Décision go/no-go et choix de caméra consignés dans un ADR
 
 ## Protocole de mesure
 
@@ -133,7 +133,7 @@ latence geste → *son* (US7), qui ajoute au retard ci-dessus les ≈ 5 ms du mo
 
 ## Décisions prises (liens vers les ADR)
 
-- [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) — **proposé, en attente de tes mesures** : la grille de lecture est fixée, la décision sera écrite avec tes résultats.
+- [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) — **accepté le 2026-10-10 : go, sans achat de caméra pour l'instant** ; l'achat d'une caméra 60 images/s devient conditionnel (lumière, retard geste → son, placement).
 
 ## Écarts par rapport au plan
 
@@ -146,4 +146,16 @@ latence geste → *son* (US7), qui ajoute au retard ci-dessus les ≈ 5 ms du mo
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 
-_À remplir à la clôture._
+**Ce qui a marché**
+
+- Le découpage en 3 PR (suivi et détection, processus caméra et débogage, mesure et décision) a permis de tout construire et tester sans caméra : la logique pure (`color_tracker`, `strike_detector`, `measure`) est couverte par des images et des trajectoires synthétiques, et la boucle caméra par une source d'images injectable. Quand tu as branché ta webcam, il n'y avait plus qu'à calibrer.
+- Les réglages par défaut posés en PR 1 sans pouvoir les mesurer (plage `GREEN`, plan de frappe, seuils) se sont avérés suffisants pour ta baguette et ton embout. Prévenir qu'ils n'étaient pas calibrés, plutôt que de les présenter comme sûrs, était la bonne posture.
+- Le mode `--simulate` a permis de vérifier l'outil de mesure de bout en bout, à travers le vrai processus séparé, sans ouvrir ta webcam (R9).
+- Fixer la grille de lecture de l'ADR avant la mesure a rendu la décision immédiate : il ne restait qu'à comparer des chiffres à des seuils déjà écrits.
+- La séance clavier de référence donne un retard geste → détection sans aucun matériel de mesure.
+
+**Ce qui a coincé**
+
+- Je ne pouvais ni voir ta caméra ni tester avec ta baguette : tout ce qui touche à la réalité (couleur, lumière, tenue du suivi) reposait sur ton essai. Ça a marché, mais la phase s'est jouée en un aller-retour de test plutôt qu'en itérations rapides.
+- Les résultats ont été rapportés de mémoire, en tranches (≤ 55 ms, 48 à 50 coups) plutôt qu'en valeurs exactes, et la lumière n'a pas été consignée. Suffisant pour décider, mais l'ADR le dit explicitement et ses réserves en tiennent compte. Faire écrire à l'outil ses résultats dans un fichier rendrait la prochaine mesure exacte.
+- Le critère de la phase (90 % sur 50 coups à 80 BPM, une baguette) est nettement plus léger que US7 (95 % sur 100 coups à 90 BPM, plusieurs éléments) : « go » ne veut pas dire que US7 est acquise, seulement que l'approche est assez prometteuse pour continuer.

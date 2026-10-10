@@ -2,7 +2,7 @@
 
 Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui défilent, puis jouez « dans le vide » devant une webcam avec des baguettes à embout coloré.
 
-> **Statut** : phases 01 (batterie au clavier, `v0.1.0`) et 02 (partitions, `v0.2.0`) terminées. Phase 03 (vision, preuve de concept) en cours.
+> **Statut** : phases 01 (batterie au clavier, `v0.1.0`), 02 (partitions, `v0.2.0`) et 03 (vision, preuve de concept, `v0.3.0`) terminées. Phase 04 (deux mains) à venir.
 > Voir [docs/00-cadrage.md](docs/00-cadrage.md) et [docs/phases/](docs/phases/).
 
 ## Feuille de route
@@ -11,7 +11,7 @@ Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui d�
 | --- | --- | --- |
 | V1 | Batterie au clavier | Terminé (`v0.1.0`) |
 | V2 | Partitions qui défilent | Terminé (`v0.2.0`) |
-| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept en cours (une baguette, la caisse claire) |
+| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept validée (`v0.3.0`) ; deux mains à venir |
 
 ## Installation (Windows)
 
@@ -90,9 +90,11 @@ l'appui n'est pas reçue par Windows dans cette combinaison.
 
 ## Vision : preuve de concept (phase 03)
 
-La V3 remplacera le clavier par des baguettes à embout coloré filmées par webcam. Pour
-l'instant, deux outils servent à vérifier que c'est assez rapide et fiable, avec une
-seule baguette et la webcam déjà présente. Aucune image n'est enregistrée.
+La V3 remplacera le clavier par des baguettes à embout coloré filmées par webcam. La
+preuve de concept (une baguette, la webcam intégrée) est concluante : décision « go »
+sans achat de caméra, voir l'[ADR 0002](docs/adr/0002-vision-go-no-go-et-camera.md). Les
+deux outils de cette phase restent disponibles pour calibrer et mesurer. Aucune image
+n'est enregistrée.
 
 ```powershell
 uv run python tools/vision_debug.py      # aperçu caméra, point suivi, plan de frappe : pour calibrer

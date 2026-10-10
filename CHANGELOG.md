@@ -5,11 +5,20 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-10
+
+Phase 03 — Vision : preuve de concept (V3.0) : une baguette à embout coloré, suivie par la webcam intégrée, détectée assez vite et assez sûrement pour continuer.
+
 ### Added
 
 - Suivi de couleur et détection de coup (phase 03, PR 1) : `core/events.py` (`HitEvent`/`Source`), `input/vision/color_tracker.py` (suivi HSV d'un embout coloré) et `input/vision/strike_detector.py` (détection d'un coup au franchissement d'un plan de frappe), logique pure testée sur des images et trajectoires synthétiques, sans caméra.
 - Processus caméra et écran de débogage (phase 03, PR 2) : `input/vision/process.py` (capture dans un processus séparé, file de `VisionSample`), `tools/vision_debug.py` (aperçu caméra, plan de frappe, vitesse, images/s, latence, compteur de coups) — à calibrer et essayer avec ta webcam.
 - Séance de mesure vision (phase 03, PR 3) : `tools/vision_measure.py` (métronome à 80 BPM, 4 clics de décompte puis 50 coups ; séance caméra et séance clavier de référence ; coups détectés, faux coups, images/s réelles, temps de traitement, retard de la caméra par rapport au clavier ; mode `--simulate` sans caméra), logique de comptage dans `input/vision/measure.py`. Protocole de mesure dans la page de la phase 03 ; ADR 0002 (go/no-go et choix de caméra) créé, en attente des mesures.
+- ADR 0002 (go/no-go et choix de caméra) : décision **go, sans achat de caméra pour l'instant**, grille de lecture et mesures consignées.
+
+### Validated
+
+- Testé en jouant par l'utilisateur avec une brosse à dents verte comme embout : suivi sans décrochage, passage du plan de frappe détecté, compteur de coups juste ; séance de mesure de 50 coups à 80 BPM : 48 à 50 détectés, 0 faux coup, 31,2 images/s réelles, retard par rapport au clavier ≤ 55 ms.
 
 ## [0.2.0] - 2026-10-09
 
