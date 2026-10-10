@@ -73,9 +73,9 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 ## 8. Phase en cours
 
 **Phase 04 — Vision : deux mains, kit complet (V3.1)** → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
-Prérequis avant d'y toucher : cadrer la phase en détail (découpage en PR) et demander à
-l'utilisateur quelle couleur va dans quelle main (couleurs choisies : vert et orange pour les
-baguettes, bleu pour le pied) — voir le document de phase.
+Cadrée en 6 PR (deux mains, zones, calibration, jeu à la caméra, mesure US7, nuance) — voir le
+document de phase. Main gauche orange, main droite verte, bleu réservé au pied (phase 05).
+Quatre éléments : charleston fermée, caisse claire, tom médium, ride (côte à côte dans l'image).
 
 Phases terminées :
 - Phase 03 — Vision : preuve de concept (V3.0) terminée le 2026-10-10, tag `v0.3.0`, décision go sans achat de caméra (ADR 0002) → [docs/phases/phase-03-vision-poc.md](docs/phases/phase-03-vision-poc.md)
