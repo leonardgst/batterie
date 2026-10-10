@@ -5,6 +5,14 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+### Added
+
+- Deux mains (phase 04, PR 1) : plage de couleur `ORANGE` (vive, volontairement exigeante en saturation pour ne pas suivre la peau), suivi de plusieurs embouts à la fois dans `input/vision/process.py` (`MarkerSpec`, `track_markers`, `run_markers_process` : un détecteur de coup par main, anti-rebond propre à chaque main, image retournée en miroir en option), et cible `--target hands` dans `tools/vision_debug.py` et `tools/vision_measure.py` (main gauche orange, main droite verte). Préréglage non calibré, à essayer devant ta caméra.
+
+### Changed
+
+- `VisionSample` porte maintenant un échantillon par embout (`markers`) ; `point`, `velocity_px_per_s` et `hit_event` restent disponibles pour le premier embout, donc la baguette et le pied marchent comme avant. Dans les outils, un préréglage de cible (`TargetPreset`) regroupe maintenant un ou plusieurs embouts (`MarkerPreset`).
+
 ## [0.3.0] - 2026-10-10
 
 Phase 03 — Vision : preuve de concept (V3.0) : une baguette à embout coloré, suivie par la webcam intégrée, détectée assez vite et assez sûrement pour continuer.

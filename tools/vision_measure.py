@@ -31,7 +31,7 @@ import multiprocessing as mp
 import queue as queue_module
 import sys
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from enum import Enum, auto
 from typing import Any
 
@@ -41,14 +41,18 @@ import pygame
 
 from batterie.audio.engine import init_mixer
 from batterie.core.events import Source
-from batterie.input.vision.color_tracker import ColorRange
 from batterie.input.vision.measure import (
     SessionPlan,
     SessionRecorder,
     SessionResult,
     format_report,
 )
-from batterie.input.vision.process import WORKING_WIDTH, VisionSample, run_vision_process
+from batterie.input.vision.process import (
+    WORKING_WIDTH,
+    MarkerSpec,
+    VisionSample,
+    run_markers_process,
+)
 from vision_debug import STICK, TARGETS, TargetPreset, add_target_argument
 
 PLAN = SessionPlan(bpm=80.0, hit_count=50, count_in_beats=4)
@@ -107,47 +111,52 @@ def _make_click(frequency_hz: float) -> pygame.mixer.Sound:
 
 
 def _simulated_frames(
-    color_range: ColorRange, strike_plane_y: float, beat_interval_s: float
+    specs: Sequence[MarkerSpec], beat_interval_s: float, mirror: bool = False
 ) -> Iterator[np.ndarray]:
-    """Embout fictif (mode ``--simulate``) : un carré de la couleur calibrée qui
-    franchit le plan de frappe vers le bas à chaque multiple de ``beat_interval_s``
-    de l'horloge, filmé à ``SIMULATED_FPS``."""
+    """Embouts fictifs (mode ``--simulate``) : un carré de la couleur calibrée par embout.
+
+    Avec un seul embout, il franchit le plan de frappe vers le bas à chaque multiple de
+    ``beat_interval_s`` de l'horloge. Avec plusieurs, ils se relaient : l'embout ``k``
+    frappe un clic sur ``n``, à tour de rôle, côte à côte dans l'image. Filmé à
+    ``SIMULATED_FPS``. Comme une vraie caméra face à toi, l'image brute montre le premier
+    embout (ta main gauche) à droite quand ``mirror`` est vrai : c'est le traitement qui
+    la remet à gauche."""
     width, height = SIMULATED_FRAME_SIZE
     half = SIMULATED_MARKER_HALF_SIZE
-    middle_hsv = [
-        (low + high) // 2 for low, high in zip(color_range.lower, color_range.upper, strict=True)
-    ]
-    marker_bgr = cv2.cvtColor(np.uint8([[middle_hsv]]), cv2.COLOR_HSV2BGR)[0][0]
-    plane_y = strike_plane_y * width / WORKING_WIDTH
-    amplitude = max(10.0, min(120.0, plane_y - half - 5, height - half - 5 - plane_y))
+    count = len(specs)
+    colors = []
+    for spec in specs:
+        middle_hsv = [
+            (low + high) // 2
+            for low, high in zip(spec.color_range.lower, spec.color_range.upper, strict=True)
+        ]
+        colors.append(cv2.cvtColor(np.uint8([[middle_hsv]]), cv2.COLOR_HSV2BGR)[0][0])
+    period_s = count * beat_interval_s
     while True:
-        phase = (time.perf_counter() % beat_interval_s) / beat_interval_s
-        y = int(plane_y + amplitude * math.sin(2 * math.pi * phase))
+        now = time.perf_counter()
         frame = np.zeros((height, width, 3), dtype=np.uint8)
-        frame[max(0, y - half) : y + half, width // 2 - half : width // 2 + half] = marker_bgr
+        for index, spec in enumerate(specs):
+            plane_y = spec.strike_plane_y * width / WORKING_WIDTH
+            amplitude = max(10.0, min(120.0, plane_y - half - 5, height - half - 5 - plane_y))
+            phase = ((now - index * beat_interval_s) % period_s) / period_s
+            y = int(plane_y + amplitude * math.sin(2 * math.pi * phase))
+            slot = count - index if mirror else index + 1
+            x = width * slot // (count + 1)
+            frame[max(0, y - half) : y + half, x - half : x + half] = colors[index]
         yield frame
         time.sleep(1 / SIMULATED_FPS)
 
 
 def _run_simulated_vision(
-    sample_queue: Any,
-    color_range: ColorRange,
-    strike_plane_y: float,
-    element_id: str,
-    beat_interval_s: float,
-    min_speed_px_per_s: float,
-    refractory_s: float,
+    sample_queue: Any, specs: Sequence[MarkerSpec], beat_interval_s: float, mirror: bool
 ) -> None:
     """Point d'entrée du processus vision en mode ``--simulate`` (aucune caméra ouverte)."""
-    run_vision_process(
+    run_markers_process(
         sample_queue,
-        color_range,
-        strike_plane_y,
-        element_id=element_id,
-        min_speed_px_per_s=min_speed_px_per_s,
-        refractory_s=refractory_s,
+        specs,
+        mirror=mirror,
         send_frames=True,
-        frames=_simulated_frames(color_range, strike_plane_y, beat_interval_s),
+        frames=_simulated_frames(specs, beat_interval_s, mirror),
     )
 
 
@@ -182,28 +191,15 @@ class MeasureApp:
 
     def _start_camera(self) -> None:
         self._queue = mp.Queue(maxsize=64)
-        preset = self.target
+        specs = self.target.specs()
         if self.simulate:
             entry_point = _run_simulated_vision
-            args: tuple = (
-                self._queue,
-                preset.color_range,
-                preset.strike_plane_y,
-                preset.element_id,
-                PLAN.beat_interval_s,
-                preset.min_speed_px_per_s,
-                preset.refractory_s,
-            )
+            args: tuple = (self._queue, specs, PLAN.beat_interval_s, self.target.mirror)
             kwargs: dict = {}
         else:
-            entry_point = run_vision_process
-            args = (self._queue, preset.color_range, preset.strike_plane_y)
-            kwargs = {
-                "element_id": preset.element_id,
-                "min_speed_px_per_s": preset.min_speed_px_per_s,
-                "refractory_s": preset.refractory_s,
-                "send_frames": True,
-            }
+            entry_point = run_markers_process
+            args = (self._queue, specs)
+            kwargs = {"mirror": self.target.mirror, "send_frames": True}
         self._process = mp.Process(target=entry_point, args=args, kwargs=kwargs, daemon=True)
         self._process.start()
 
@@ -224,14 +220,16 @@ class MeasureApp:
             while True:
                 sample: VisionSample = self._queue.get_nowait()
                 self._latest = sample
-                if sample.hit_event is not None:
-                    self._last_hit_ns = sample.hit_event.t_ns
+                hit_events = sample.hit_events
+                if hit_events:
+                    self._last_hit_ns = hit_events[-1].t_ns
                 if recording and self._recorder is not None:
+                    tracked = any(m.point is not None for m in sample.markers.values())
                     self._recorder.add_frame(
-                        sample.t_ns / NS_PER_SECOND, sample.processing_ms, sample.point is not None
+                        sample.t_ns / NS_PER_SECOND, sample.processing_ms, tracked
                     )
-                    if sample.hit_event is not None:
-                        self._recorder.add_hit(sample.hit_event.t_ns / NS_PER_SECOND)
+                    for hit_event in hit_events:
+                        self._recorder.add_hit(hit_event.t_ns / NS_PER_SECOND)
         except queue_module.Empty:
             pass
 
@@ -342,7 +340,7 @@ class MeasureApp:
         """Résultats des séances terminées (caméra comparée au clavier s'il a été fait)."""
         lines: list[str] = []
         if self.results:
-            lines.append(f"Cible : {self.target.label} ({self.target.element_id})")
+            lines.append(f"Cible : {self.target.describe()}")
             lines.append("")
         for source in (Source.VISION, Source.KEYBOARD):
             result = self.results.get(source)
@@ -381,15 +379,27 @@ class MeasureApp:
             return
         surface = _frame_to_surface(self._latest.frame_preview)
         screen.blit(surface, PREVIEW_ORIGIN)
-        plane_y = PREVIEW_ORIGIN[1] + int(self.target.strike_plane_y)
         plane_end_x = PREVIEW_ORIGIN[0] + surface.get_width()
-        pygame.draw.line(screen, PLANE_COLOR, (PREVIEW_ORIGIN[0], plane_y), (plane_end_x, plane_y))
-        if self._latest.point is not None:
-            center = (
-                PREVIEW_ORIGIN[0] + int(self._latest.point.x),
-                PREVIEW_ORIGIN[1] + int(self._latest.point.y),
-            )
-            pygame.draw.circle(screen, self._lamp_color(now_ns, POINT_COLOR), center, 8, width=2)
+        for marker in self.target.markers:
+            plane_y = PREVIEW_ORIGIN[1] + int(marker.strike_plane_y)
+            start, end = (PREVIEW_ORIGIN[0], plane_y), (plane_end_x, plane_y)
+            pygame.draw.line(screen, PLANE_COLOR, start, end)
+        for marker in self.target.markers:
+            point = self._latest.markers[marker.name].point
+            if point is not None:
+                center = (PREVIEW_ORIGIN[0] + int(point.x), PREVIEW_ORIGIN[1] + int(point.y))
+                color = self._lamp_color(now_ns, marker.display_color)
+                pygame.draw.circle(screen, color, center, 8, width=2)
+
+    def _tracked_markers(self) -> list[str]:
+        """Libellés des embouts actuellement vus dans l'image."""
+        if self._latest is None:
+            return []
+        return [
+            marker.label
+            for marker in self.target.markers
+            if self._latest.markers[marker.name].point is not None
+        ]
 
     def _lamp_color(self, now_ns: int, idle: tuple[int, int, int]) -> tuple[int, int, int]:
         """Vert pendant un court instant après un coup détecté, ``idle`` sinon."""
@@ -423,7 +433,7 @@ class MeasureApp:
             y = self._draw_lines(
                 screen,
                 [
-                    f"V : séance caméra ({self.target.label} filmé par la webcam)",
+                    f"V : séance caméra — {self.target.label}",
                     "K : séance clavier de référence (barre d'espace, sans caméra)",
                     "Échap : quitter",
                 ],
@@ -440,12 +450,14 @@ class MeasureApp:
 
         elif self.phase is Phase.READY:
             if self.source is Source.VISION:
-                tracked = self._latest is not None and self._latest.point is not None
+                tracked = self._tracked_markers()
                 lines = [
                     "Place-toi comme pour jouer. La ligne rouge est le plan",
                     "de frappe : le marqueur doit la traverser à chaque coup.",
-                    f"Marqueur : {'suivi (cercle jaune)' if tracked else 'non détecté'}",
                 ]
+                for marker in self.target.markers:
+                    status = "suivi" if marker.label in tracked else "non détecté"
+                    lines.append(f"{marker.label} : {status}")
             else:
                 lines = ["Tape la barre d'espace sur chaque clic, d'un doigt."]
             lines += [

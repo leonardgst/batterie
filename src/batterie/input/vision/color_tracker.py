@@ -35,6 +35,12 @@ class TrackedPoint:
 # Préréglages pour les couleurs suggérées par le cadrage (embout vert / magenta,
 # cadrage §3 « Baguettes artificielles ») ; à recalibrer selon ta lumière réelle.
 GREEN = ColorRange(lower=(40, 80, 60), upper=(85, 255, 255))
+# Orange vif (main gauche, phase 04) : teinte 5 à 22 (l'orange pur est vers 15), mais surtout
+# une saturation élevée (≥ 160). Une peau a la même teinte qu'un orange, avec une saturation
+# bien plus basse (typiquement sous 150) : c'est la saturation qui sépare l'embout de la main.
+# Conséquence voulue : un orange pâle n'est pas suivi, il faut un ruban ou un embout orange
+# fluo. NON CALIBRÉ : à régler sur ton embout et ta lumière avec ``vision_debug.py --target hands``.
+ORANGE = ColorRange(lower=(5, 160, 120), upper=(22, 255, 255))
 MAGENTA = ColorRange(lower=(140, 80, 60), upper=(170, 255, 255))
 
 
