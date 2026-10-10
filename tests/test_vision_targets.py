@@ -200,3 +200,11 @@ def test_sidebar_for_two_hands_reports_each_hand_separately():
 def test_sidebar_before_the_first_image_does_not_crash():
     lines = vision_debug.sidebar_lines(vision_debug.HANDS, None, {"left": 0, "right": 0})
     assert any("Images/s : —" in line for line in lines)
+
+
+def test_debug_tool_hands_preset_matches_the_app_hand_definition():
+    # Une seule définition des deux mains pour l'appli et l'outil : elles ne doivent pas diverger.
+    from batterie.input.vision.hands import HANDS_MIRROR, hand_specs
+
+    assert vision_debug.HANDS.specs() == hand_specs()
+    assert vision_debug.HANDS.mirror == HANDS_MIRROR

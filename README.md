@@ -117,6 +117,17 @@ Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --s
 Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
 [pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 
+## Calibrer la caméra (phase 04)
+
+Pour jouer avec tes deux baguettes (embout orange à gauche, vert à droite), l'application
+doit savoir où se trouve chaque élément dans l'image de ta caméra. Depuis l'accueil,
+choisis **Calibrer la caméra** : l'écran te demande de frapper, à l'endroit où tu les
+imagines, la charleston fermée, la caisse claire, le tom médium puis le ride, 3 coups chacun,
+de gauche à droite. Les rectangles montrent où tu frappes, la ligne rouge où le coup se
+déclenchera. **Entrée** enregistre (`%APPDATA%\Batterie\zones.toml`), **Échap** annule sans
+rien changer, **R** recommence l'élément en cours. À refaire si ta caméra ou toi bougez.
+Le jeu à la caméra lui-même arrive à la PR suivante.
+
 ## Documentation
 
 - [Cadrage](docs/00-cadrage.md) · [Spécifications](docs/01-specifications.md) · [Architecture](docs/02-architecture.md)
