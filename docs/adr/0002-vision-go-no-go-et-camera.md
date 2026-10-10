@@ -108,19 +108,48 @@ Ce test ne mesure qu'une pointe de pied, sans pied gauche ni mains en même temp
 
 ### Mesures — pied, webcam intégrée au sol
 
-_À remplir avec les résultats de l'utilisateur (séance pied, `tools/vision_measure.py --target foot`)._
+Séance faite par l'utilisateur le 2026-10-10 avec `tools/vision_measure.py --target foot`, texte du terminal transmis tel quel : **une seule séance caméra** (le protocole en prévoyait trois) précédée d'une séance de référence clavier.
 
-Conditions : placement — ordinateur à … cm des pieds, caméra à … cm du sol ; marqueur — … (couleur, taille, position sur la chaussure) ; lumière — … ; préréglage `FOOT` retenu après calibration — plan de frappe …, vitesse minimale …, anti-rebond … ; référence — séance clavier au doigt / pied sur un clavier USB au sol.
+Conditions : ordinateur à 60–70 cm des pieds (rapporté) ; marqueur — ruban vert sur la pointe de la chaussure droite, **qui s'est décollé pendant la séance** ; préréglage `FOOT` — valeurs par défaut du dépôt (plan à 100 px, vitesse minimale 80 px/s, anti-rebond 0,20 s), d'après l'absence de modification locale dans la copie de travail ; hauteur de la caméra, lumière et type de référence clavier (doigt, ou pied sur un clavier USB au sol) — non précisés.
 
-| Date | Séance | Coups détectés | Faux coups | Écart coup − clic (médiane, écart-type) | Marqueur visible | Images/s réelles | Traitement (médiane / p95 / max) | Retard par rapport au clavier |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | Référence clavier | | | | — | — | — | — |
-| | Pied 1 | | | | | | | |
-| | Pied 2 | | | | | | | |
-| | Pied 3 | | | | | | | |
+| Séance | Coups détectés | Faux coups | Écart coup − clic (médiane, écart-type) | Marqueur visible | Images/s réelles | Traitement (médiane / p95 / max) | Retard par rapport au clavier |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Référence clavier | 50 / 50 (100 %) | 0 | −31 ms, 41 ms | — | — | — | — |
+| Pied 1 | 41 / 50 (82 %) | 0 | +78 ms, 54 ms | 100 % | 31,0 (intervalle médian 32,2 ms, max 83,7 ms) | 0,84 / 1,33 / 3,76 ms | +109 ms |
+| Pied 2 et 3 | non faites | | | | | | |
+
+Retard logiciel estimé par l'outil (demi-intervalle + traitement) : 17,0 ms.
+
+**Les 9 coups « manqués » : ce que dit l'utilisateur.** Il rapporte que ce sont des coups qu'il n'a pas joués, parce que son ruban s'est défait en cours de séance, et que tous les coups joués ont été comptés (aucun coup en trop non plus : 0 faux coup). L'outil ne peut pas le confirmer : il ne sait pas distinguer un coup raté par la détection d'un coup non joué, et le taux réel sur les coups joués n'est donc pas calculable à partir de ce texte. Consigné ici comme témoignage, pas comme mesure.
+
+### Lecture du test du pied
+
+Selon la grille ci-dessus :
+
+- **Détection : ligne « détection entre 35 et 44 / 50, cause identifiée »** → corriger la cause (ruban qui tient) et refaire une séance avant de conclure. Option (a) non confirmée par la grille, mais rien dans ces chiffres ne la contredit : marqueur vu sur 100 % des images, 0 faux coup, 31,0 images/s, traitement inférieur à 1 ms.
+- **Retard : +109 ms par rapport au clavier**, au-dessus du seuil de 100 ms de la grille de la baguette (« chercher d'abord la cause avant de trancher »), et au moins le double du résultat des mains (≤ 55 ms). Le logiciel n'y est pour presque rien (17 ms estimés) ; le reste est de l'attente d'image et du retard interne de la caméra, ou vient du réglage. Avec le son (≈ 5 ms), on serait vers 115 ms, loin du ≤ 60 ms que demande US8 pour la grosse caisse. **C'est le point faible de ce test.**
+- **Un à-coup de cadence** : intervalle maximal de 83,7 ms entre deux images, soit environ 2,5 images d'un coup alors que la médiane est de 32,2 ms. Une caméra tournée vers le sol, plus sombre, peut allonger son temps de pose ; non vérifié.
+
+Ce que ce test ne permet pas de dire, et pourquoi la conclusion reste ouverte :
+
+- **une seule séance**, avec un ruban qui se décolle : ni la répétabilité du retard, ni le taux de détection sur 50 coups joués ne sont connus ;
+- **la référence clavier n'est pas précisée** : si c'était un doigt sur la barre d'espace, une partie des +109 ms est la différence d'anticipation entre un doigt et un pied (voir le protocole), pas la caméra ;
+- **le préréglage `FOOT` n'a pas été calibré** (valeurs de départ estimées). Le moment où le coup est déclaré dépend de la position du plan de frappe par rapport à la course de la pointe du pied : un plan trop bas déclare le coup tard, donc rajoute du retard sans que la détection soit « mauvaise » ;
+- l'écart-type du coup au clic est de 54 ms contre 41 ms pour la référence : la caméra ajoute de la dispersion, sans qu'on sache la part qui vient du réglage.
 
 ### Décision caméras pour la suite
 
-**Provisoire, en attendant les mesures : (a), avec (c) en secours** — c'est la disposition choisie avec l'utilisateur. À confirmer ou corriger avec le tableau de lecture ci-dessus.
+**Provisoire : (a), avec (c) en secours** — c'est la disposition choisie avec l'utilisateur.
+
+**Mise à jour après la séance pied (2026-10-10) : décision inchangée, mais non confirmée.** Le suivi du pied fonctionne (marqueur toujours vu, pas de faux coup, d'après l'utilisateur tous les coups joués comptés), donc rien n'oblige à abandonner (a). Mais le retard mesuré (+109 ms par rapport au clavier) est trop élevé pour une grosse caisse tant qu'on ne sait pas s'il est dû au réglage, à la référence ou à la caméra. Un test à une seule séance, avec un ruban qui se décolle, ne suffit pas pour trancher entre (a) et (c). **La décision finale pour les pieds est donc repoussée au début de la phase 05**, après la séance de confirmation décrite dans les conséquences ; elle n'engage aucun achat d'ici là : seule la caméra des mains (d'occasion, ~40 €) est prévue.
+
+**Si le retard reste élevé après correction (au-dessus de ~60 ms par rapport au clavier) :** l'option (c), pédales au clavier USB, devient la solution principale pour la grosse caisse. Sa latence est celle du clavier, déjà validée en phase 01. C'est exactement le rôle de « secours » que l'utilisateur lui a donné.
 
 Précision sur la décision « ne rien acheter maintenant » (plus haut) : elle valait pour la performance (la webcam intégrée suffit pour la baguette). Avec cette disposition, la webcam intégrée est affectée aux pieds, donc la webcam des mains sera forcément une autre caméra : le critère de **placement** est rempli, et l'achat d'une webcam 60 images/s d'occasion devient prévu, à faire quand la phase 04 en aura besoin (la phase 04 peut démarrer avec la webcam intégrée tant que la caméra n'est pas là, puisqu'elle a suffi pour la baguette en phase 03).
+
+### Conséquences du test du pied
+
+- **Séance de confirmation à faire avant la phase 05** (ne bloque ni la phase 03 ni la phase 04) : ruban solidement fixé (le ruban adhésif seul s'est décollé ; l'attacher aussi autour de la chaussure), plan de frappe réglé avec `vision_debug.py --target foot`, puis la référence clavier **au pied** sur un clavier USB posé au sol, puis trois séances pied. À lire avec la même grille ; ajouter à l'étape de lecture le retard : sous ~60 ms → (a) confirmée ; au-dessus après correction → (c).
+- Pistes si le retard persiste, par ordre de coût : déplacer le plan de frappe pour déclarer le coup plus tôt dans la descente de la pointe ; ajouter de la lumière sur le sol (cadence et temps de pose de la caméra) ; régler l'exposition de la webcam à la main si le pilote le permet ; une caméra plus rapide pour les pieds (option (b)) en dernier, car elle sort du budget.
+- L'outil ne distingue pas un coup non détecté d'un coup non joué. Une amélioration possible, hors périmètre ici : demander en fin de séance combien de coups n'ont pas été joués, et les retirer du dénominateur.
+- Les couleurs de marqueurs choisies par l'utilisateur pour la suite (vert et orange pour les baguettes, **bleu pour le pied**) sont consignées dans la page de la phase 04 ; ce test a utilisé le vert pour le pied, comme prévu par le protocole.

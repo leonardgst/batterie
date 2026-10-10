@@ -14,11 +14,14 @@ Référence : [cadrage](../00-cadrage.md) §8 (phase 04), user story US7 (critè
 - Le suivi d'un embout vert avec la webcam intégrée a atteint le critère de la phase 03 : 48 à 50 coups sur 50, 0 faux coup, 31,2 images/s, retard par rapport au clavier ≤ 55 ms.
 - **Pas d'achat de caméra décidé.** Le livrable « achat de la caméra 60 images/s » du cadrage devient conditionnel : cadence ou détection qui chutent en lumière faible, retard geste → son au-dessus de 60 ms avec le son réel, ou placement de la caméra devenu le problème.
 - Réserves de l'ADR à lever ici : deux mains (risque de confusion de couleur), plusieurs éléments, tenue à 90 BPM en croches, retard détection + son au ras de 60 ms.
+- Risques de confusion de couleur à vérifier à la calibration, pas des certitudes : un **orange** peu saturé ressemble à la peau de la main (choisir un orange vif, fluo, et regarder si le suivi s'accroche à la main) ; un **bleu** ressemble à un jean, si tu en portes pendant les tests du pied.
+- Pieds : test anticipé en PR 4 de la phase 03, concluant pour le suivi mais pas encore pour le retard (+109 ms par rapport au clavier, une séance) ; décision pour les pieds repoussée au début de la phase 05 (ADR 0002). La phase 04 ne dépend pas de ce résultat.
 - `tools/vision_debug.py` et `tools/vision_measure.py` servent de base pour calibrer et mesurer ; la calibration par édition de constantes (écart de la phase 03) sera probablement à remplacer par un vrai écran de calibration, puisque cette phase en multiplie les réglages.
 
 ## Prérequis
 
-- [ ] Les deux couleurs d'embout (main gauche / main droite) que tu comptes utiliser, et de quoi les fabriquer (ruban adhésif, embouts)
+- [x] Couleurs choisies par l'utilisateur le 2026-10-10 : **vert et orange** pour les baguettes, **bleu** pour le pied. Reste à préciser : laquelle pour la main gauche, laquelle pour la droite, et de quoi fabriquer les embouts
+- [ ] Plages HSV de l'orange et du bleu à ajouter et calibrer (seul le vert existe : `GREEN` dans `input/vision/color_tracker.py`) ; deux marqueurs à distinguer dans la même image
 - [ ] Phase détaillée et découpée en PR (à faire au démarrage)
 
 ## Livrables
