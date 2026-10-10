@@ -39,3 +39,5 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tools/ n'est pas un paquet : les tests importent vision_debug et vision_measure depuis là.
+pythonpath = ["tools"]

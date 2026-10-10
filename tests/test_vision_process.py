@@ -128,3 +128,36 @@ def test_run_vision_process_pushes_every_sample_onto_the_queue():
 
     assert len(queue.items) == 3
     assert any(sample.hit_event is not None for sample in queue.items)
+
+
+def test_detector_thresholds_are_passed_through_to_the_strike_detector():
+    # Le franchissement 70 -> 150 se fait en 20 ms d'horloge truquée : ~4000 px/s.
+    frames = [_frame_at(50), _frame_at(70), _frame_at(150)]
+
+    default = list(track_and_detect(iter(frames), GREEN, strike_plane_y=100.0, now_ns=_FakeClock()))
+    too_slow_for_this_gesture = list(
+        track_and_detect(
+            iter(frames),
+            GREEN,
+            strike_plane_y=100.0,
+            min_speed_px_per_s=10_000.0,
+            now_ns=_FakeClock(),
+        )
+    )
+
+    assert any(sample.hit_event is not None for sample in default)
+    assert all(sample.hit_event is None for sample in too_slow_for_this_gesture)
+
+
+def test_run_vision_process_forwards_the_detector_thresholds():
+    frames = [_frame_at(50), _frame_at(70), _frame_at(150)]
+    queue = _FakeQueue()
+
+    # Horloge réelle ici (pas d'horloge injectable) : les vitesses calculées sont énormes,
+    # d'où un seuil volontairement inatteignable.
+    run_vision_process(
+        queue, GREEN, strike_plane_y=100.0, min_speed_px_per_s=1e12, frames=iter(frames)
+    )
+
+    assert len(queue.items) == 3
+    assert all(sample.hit_event is None for sample in queue.items)

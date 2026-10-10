@@ -42,7 +42,7 @@ No-go (option 4) seulement si, après correction de la calibration et de l'écla
 
 Séances faites par l'utilisateur avec `tools/vision_measure.py` (une séance clavier de référence, des séances caméra), puis rapportées à la fin de la phase. Les valeurs sont celles qu'il a lues à l'écran ; quand il n'a donné qu'une tranche, c'est la tranche qui est consignée, pas une valeur inventée. Le détail séance par séance n'a pas été relevé : l'utilisateur a jugé inutile de transmettre le texte du terminal.
 
-Conditions : embout — brosse à dents verte fixée à la baguette ; `COLOR_RANGE` — `GREEN` et `STRIKE_PLANE_Y` — 150, valeurs par défaut du dépôt ; lumière — non précisée ; sortie audio — casque filaire ; webcam — intégrée du portable.
+Conditions : embout — brosse à dents verte fixée à la baguette ; réglages — valeurs par défaut du dépôt (couleur `GREEN`, plan de frappe à 150 ; aujourd'hui le préréglage `STICK` de `tools/vision_debug.py`) ; lumière — non précisée ; sortie audio — casque filaire ; webcam — intégrée du portable.
 
 | Ce qu'on regarde | Seuil de la grille | Mesuré | Verdict |
 | --- | --- | --- | --- |
@@ -73,7 +73,7 @@ Réserves, pour ne pas surestimer ce résultat :
 - le retard geste → son dépasse 60 ms avec le son réel en phase 04 ;
 - le placement devient le problème : la webcam du portable est fixée à l'écran, alors que le cadrage recommande une caméra en hauteur face au batteur (~1,8 m, inclinée vers le bas), et la phase 05 (pieds) demandera un second point de vue.
 
-Caractéristiques à chercher le moment venu (cadrage §7, inchangées) : une webcam UVC (sans pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ d'environ 80–90°, sous 45 € (prix à vérifier à l'achat ; Logitech C922 en exemple). Cette caméra rapprocherait la cible de 40 ms (16 ms par image au lieu de 33 ms).
+Caractéristiques à chercher le moment venu (cadrage §7, inchangées) : une webcam UVC (sans pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ d'environ 80–90°, sous 45 €. Prix : une Logitech C922 neuve coûte 70 à 99 € ; d'occasion, une C922 ou une StreamCam se trouve vers 40 € (correction du 2026-10-10). Cette caméra rapprocherait la cible de 40 ms (16 ms par image au lieu de 33 ms).
 
 ## Conséquences
 
@@ -81,3 +81,46 @@ Caractéristiques à chercher le moment venu (cadrage §7, inchangées) : une we
 - Le suivi de couleur avec embout vert reste la méthode ; MediaPipe n'est pas nécessaire à ce stade. Aucune dépendance ajoutée.
 - `tools/vision_measure.py` et son protocole servent de référence pour comparer une future caméra, ou une future version du suivi, dans les mêmes conditions.
 - Piste pour plus tard : l'outil affiche ses résultats sans les enregistrer ; en relever une trace dans un fichier rendrait les prochaines décisions plus précises que des valeurs lues et rapportées à la main.
+
+## Test du pied — webcam intégrée au sol (ajout du 2026-10-10)
+
+Contexte : la disposition des caméras choisie pour la V3 (note du [cadrage §7](../00-cadrage.md), 2026-10-10) réserve la webcam intégrée du portable aux **pieds** (ordinateur posé au sol à 50–80 cm devant les pieds), et prévoit une webcam 60 images/s séparée, en hauteur, pour les mains. Le test du pied est anticipé en phase 03 (PR 4, `--target foot`) : il est **informatif**, ne bloque pas la clôture de la phase et ne remet pas en cause la décision « go » ci-dessus, qui porte sur la baguette. Protocole : [phase 03, « Protocole de mesure — pied »](../phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
+
+### Options pour la disposition des caméras
+
+| Option | Contenu | Coût | Atouts | Limites |
+| --- | --- | --- | --- | --- |
+| **(a)** | Webcam 60 images/s pour les mains + webcam intégrée au sol pour les pieds | ~40 € (caméra d'occasion) | Rien d'autre à acheter pour les pieds ; une seule caméra à placer en hauteur | Le portable doit être posé au sol, écran refermé à demi ; le pied doit rester visible et assez net à 30 images/s |
+| **(b)** | Deuxième caméra dédiée aux pieds | Deux caméras d'occasion à ~40 € dépassent le budget de 50 € ; une caméra bon marché pour les pieds reste à chiffrer | Placement libre, indépendant du portable | Budget ; deux flux à traiter sur un processeur sans carte graphique ; deux calibrations |
+| **(c)** | Pédales : vieux clavier USB au sol, touches frappées au pied (secours) | 0 € (si un clavier est disponible) | Passe par le clavier déjà géré (`input/keyboard.py`), latence validée en phase 01, aucun risque de détection | Pas « dans le vide » ; sensation de pédale à vérifier ; à tester pour le *ghosting* avec `tools/keytest.py` |
+
+### Lecture du test du pied (grille fixée avant la mesure)
+
+Même outil et mêmes seuils que pour la baguette, avec le préréglage `FOOT` (non calibré : seuils de départ estimés, à ajuster d'abord avec `vision_debug.py --target foot`).
+
+| Résultat de la meilleure séance pied après calibration | Conclusion |
+| --- | --- |
+| ≥ 45 / 50 détectés, ≤ 2 faux coups, ≥ 25 images/s réelles | **Option (a) confirmée** : la webcam intégrée au sol suffit pour les pieds |
+| Marqueur visible moins de 90 % du temps, ou détection entre 35 et 44 / 50, avec une cause identifiée (lumière, taille ou contraste du marqueur, réglage du plan ou des seuils) | Corriger la cause et refaire une séance avant de conclure ; en attendant, (a) reste l'hypothèse de travail |
+| Moins de 35 / 50 après correction, pointe du pied masquée (par la jambe ou le pied gauche) ou cadence sous 25 images/s malgré une bonne lumière | **Option (c)** (pédales USB) pour la phase 05 ; (b) seulement si le budget le permet et si le problème vient du point de vue, pas du suivi |
+
+Ce test ne mesure qu'une pointe de pied, sans pied gauche ni mains en même temps : il dit si le pied est suivable, pas que le kit complet l'est.
+
+### Mesures — pied, webcam intégrée au sol
+
+_À remplir avec les résultats de l'utilisateur (séance pied, `tools/vision_measure.py --target foot`)._
+
+Conditions : placement — ordinateur à … cm des pieds, caméra à … cm du sol ; marqueur — … (couleur, taille, position sur la chaussure) ; lumière — … ; préréglage `FOOT` retenu après calibration — plan de frappe …, vitesse minimale …, anti-rebond … ; référence — séance clavier au doigt / pied sur un clavier USB au sol.
+
+| Date | Séance | Coups détectés | Faux coups | Écart coup − clic (médiane, écart-type) | Marqueur visible | Images/s réelles | Traitement (médiane / p95 / max) | Retard par rapport au clavier |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| | Référence clavier | | | | — | — | — | — |
+| | Pied 1 | | | | | | | |
+| | Pied 2 | | | | | | | |
+| | Pied 3 | | | | | | | |
+
+### Décision caméras pour la suite
+
+**Provisoire, en attendant les mesures : (a), avec (c) en secours** — c'est la disposition choisie avec l'utilisateur. À confirmer ou corriger avec le tableau de lecture ci-dessus.
+
+Précision sur la décision « ne rien acheter maintenant » (plus haut) : elle valait pour la performance (la webcam intégrée suffit pour la baguette). Avec cette disposition, la webcam intégrée est affectée aux pieds, donc la webcam des mains sera forcément une autre caméra : le critère de **placement** est rempli, et l'achat d'une webcam 60 images/s d'occasion devient prévu, à faire quand la phase 04 en aura besoin (la phase 04 peut démarrer avec la webcam intégrée tant que la caméra n'est pas là, puisqu'elle a suffi pour la baguette en phase 03).

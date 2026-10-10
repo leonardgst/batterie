@@ -459,7 +459,7 @@ kick         = "x---x---"
 | CI/CD | GitHub Actions sur `windows-latest` : Ruff + pytest à chaque PR | Gratuit pour un dépôt public ; teste sur ton OS | Pas de CI | 0 € |
 | Vision (V3) | OpenCV : capture + suivi des embouts colorés (HSV), dans un processus séparé ; MediaPipe Pose en option pour les pieds | Plus de 100 images/s sur un processeur sans carte graphique ; isolé de l'audio | YOLO-pose (carte graphique conseillée, licence AGPL) ; modèle entraîné maison (temps) | 0 € |
 | Détection d'un coup | Franchissement d'un « plan de frappe » à vitesse descendante suffisante, avec anti-rebond | Déclenche avant le point bas : gagne une image de latence | Attendre la remontée de la baguette (1–2 images de retard) | 0 € |
-| Caméras | Phase 03 : webcam existante. Ensuite une webcam UVC 1280×720 à 60 images/s réelles, en hauteur face à toi, inclinée vers le bas ; pieds : 2ᵉ webcam au sol si tu en as une, sinon cadrage large | 60 images/s divise par deux le retard de capture (16 ms par image au lieu de 33) | PS3 Eye (rapide mais pilotes Windows pénibles) ; deux caméras stéréo d'emblée (sur-ingénierie) | 0–50 € |
+| Caméras | Phase 03 : webcam existante. Ensuite une webcam UVC 1280×720 à 60 images/s réelles, en hauteur face à toi, inclinée vers le bas ; pieds : webcam intégrée au sol, sinon pédales au clavier USB | 60 images/s divise par deux le retard de capture (16 ms par image au lieu de 33) | PS3 Eye (rapide mais pilotes Windows pénibles) ; deux caméras stéréo d'emblée (sur-ingénierie) | 0–50 € |
 | Baguettes artificielles | Vieilles baguettes ou tourillons en bois, balle de ping-pong ou ruban mat fluo en bout, une couleur par main (ex. vert et magenta) ; marqueur fluo sur la pointe des chaussures | Couleurs vives = détection rapide et fiable | Baguettes nues (difficiles à suivre) ; capteurs inertiels (payants) | ~5 € |
 
 ## 4. Architecture
@@ -567,7 +567,7 @@ Livrables : deux couleurs (main gauche / droite) ; zones par élément ; écran 
 Fin : US7 sur caisse claire, charleston, un tom et une cymbale.
 
 **Phase 05 — V3.2 Pieds.**
-Livrables : suivi des marqueurs de chaussures (2ᵉ caméra au sol ou cadrage large) ; grosse caisse et pédale de charleston ; charleston ouverte/fermée selon le pied gauche (Could).
+Livrables : suivi des marqueurs de chaussures (webcam intégrée au sol, sinon pédales au clavier USB) ; grosse caisse et pédale de charleston ; charleston ouverte/fermée selon le pied gauche (Could).
 Fin : US8.
 
 **Phase 06 — V3.3 Partitions à la caméra.**
@@ -599,7 +599,14 @@ Livrables : README complet (français + anglais), licence du code, crédits des 
 | Abonnement Claude | Hors budget projet (hypothèse) | — | À confirmer |
 | **Total** | **0 € au départ, ≤ 50 € en V3, 0 €/mois** | **50 € + 0 €/mois** | **OK** |
 
-**Recommandation caméra.** Ne rien acheter avant la fin de la phase 03. Ensuite, une seule webcam qui coche : UVC (aucun pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ de vision d'environ 80–90°. Exemple de modèle qui coche ces cases : Logitech C922 (720p à 60 images/s) — prix à vérifier au moment de l'achat, à ne prendre que sous 45 € pour garder ~5 € pour les baguettes. Placement : à ~1,8 m de haut, 1 à 1,5 m devant toi, inclinée vers le bas. Les pieds se traitent avec une webcam déjà possédée posée au sol ; à défaut, avec un cadrage large de la même caméra.
+**Recommandation caméra.** Ne rien acheter avant la fin de la phase 03. Ensuite, une seule webcam qui coche : UVC (aucun pilote), 1280×720 à 60 images/s réelles en MJPEG, exposition réglable manuellement, champ de vision d'environ 80–90°. Exemple de modèle qui coche ces cases : Logitech C922 (720p à 60 images/s) — neuve, elle coûte 70 à 99 € (correction du 2026-10-10 : le cadrage de départ supposait moins), donc à prendre **d'occasion** (~40 €, C922 ou StreamCam) pour rester sous 45 € et garder ~5 € pour les baguettes. Placement : à ~1,8 m de haut, 1 à 1,5 m devant toi, inclinée vers le bas. Les pieds se traitent avec la webcam intégrée du portable posée au sol ; à défaut, avec des pédales au clavier USB (voir la note ci-dessous).
+
+**Note du 2026-10-10 — disposition des caméras (choisie avec l'utilisateur).**
+
+- **Mains** : une webcam 60 images/s devant toi, en hauteur (1,7–1,8 m, à 1–1,5 m), inclinée d'environ 40° vers le bas. À acheter seulement si la phase 03 dit « go » (c'est le cas, ADR 0002), d'occasion : C922 ou StreamCam, ~40 €.
+- **Pieds** : la webcam intégrée du portable, ordinateur posé au sol à 50–80 cm devant les pieds, en attendant mieux. Secours : un vieux clavier USB au sol utilisé comme pédales.
+- **Abandonné** : le « cadrage large de la caméra du haut » pour les pieds (pieds masqués par les genoux, mouvement trop petit à l'image).
+- **Conséquence** : la webcam intégrée étant réservée aux pieds, la webcam des mains est forcément une caméra séparée ; le critère de placement de l'ADR 0002 est donc rempli par ce choix. Le test du pied est anticipé en phase 03 (PR 4, informatif) pour décider avant tout achat de la suite ; options et mesures dans l'[ADR 0002](adr/0002-vision-go-no-go-et-camera.md).
 
 ## 8. Documentation initiale
 

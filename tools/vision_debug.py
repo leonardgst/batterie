@@ -1,19 +1,22 @@
 """Écran de débogage vision : aperçu caméra, point suivi, vitesse, latence (phase 03).
 
-Ouvre ta webcam (processus séparé, cadrage §4.1). Calibration : modifie
-``COLOR_RANGE`` et ``STRIKE_PLANE_Y`` ci-dessous selon ta caméra, ton embout et ta
-lumière, puis relance. La ligne du plan de frappe et le point suivi sont dessinés
+Ouvre ta webcam (processus séparé, cadrage §4.1). Calibration : modifie le préréglage
+de la cible (``STICK`` ou ``FOOT``, juste en dessous) selon ta caméra, ton marqueur et
+ta lumière, puis relance. La ligne du plan de frappe et le point suivi sont dessinés
 dans le même repère de pixels que la détection (image réduite à ``WORKING_WIDTH``,
 voir ``input/vision/process.py``), donc ce que tu vois correspond exactement à ce
 qui est détecté.
 
-Usage : ``uv run python tools/vision_debug.py``
+Usage : ``uv run python tools/vision_debug.py`` (baguette, par défaut)
+        ``uv run python tools/vision_debug.py --target foot`` (pied, test de la phase 03)
 """
 
 from __future__ import annotations
 
+import argparse
 import multiprocessing as mp
 import queue as queue_module
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -21,12 +24,63 @@ import pygame
 
 from batterie.input.vision.color_tracker import GREEN, ColorRange
 from batterie.input.vision.process import VisionSample, run_vision_process
+from batterie.input.vision.strike_detector import DEFAULT_MIN_SPEED_PX_PER_S, DEFAULT_REFRACTORY_S
 
-# --- À calibrer pour ta caméra, ton embout, ta lumière ----------------------
-COLOR_RANGE: ColorRange = GREEN
-STRIKE_PLANE_Y = 150.0  # pixels, dans l'image réduite (voir WORKING_WIDTH)
-ELEMENT_ID = "snare"
-# -----------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class TargetPreset:
+    """Réglages de ce qu'on suit : tout ce qui change entre une baguette et un pied."""
+
+    label: str  # nom affiché à l'écran
+    element_id: str
+    color_range: ColorRange
+    strike_plane_y: float  # pixels, dans l'image réduite (voir WORKING_WIDTH)
+    min_speed_px_per_s: float
+    refractory_s: float
+
+
+# --- À calibrer pour ta caméra, ton marqueur, ta lumière ---------------------
+
+# Une seule couleur pour les deux cibles : pendant le test du pied, un seul marqueur
+# est dans l'image à la fois (déplace-le de la baguette à la chaussure).
+MARKER_COLOR: ColorRange = GREEN
+
+# Baguette : les valeurs par défaut du détecteur, qui ont suffi pour ta baguette à la
+# clôture de la phase 03 (voir l'ADR 0002).
+STICK = TargetPreset(
+    label="baguette",
+    element_id="snare",
+    color_range=MARKER_COLOR,
+    strike_plane_y=150.0,
+    min_speed_px_per_s=DEFAULT_MIN_SPEED_PX_PER_S,
+    refractory_s=DEFAULT_REFRACTORY_S,
+)
+
+# Pied (grosse caisse) — NON CALIBRÉ : valeurs de départ estimées, pas mesurées. Un
+# ordre de grandeur, pour la webcam du portable posée au sol à 50-80 cm des pieds :
+# - vitesse minimale 80 px/s, contre 200 pour la baguette. La pointe du pied se lève
+#   et retombe d'environ 5 à 10 cm (une baguette : 20 cm ou plus), ce qui fait quelques
+#   dizaines de pixels dans l'image réduite, en un dixième de seconde environ : de
+#   l'ordre de 40 % de la vitesse de la baguette. Plus bas, le tremblement du point
+#   suivi pourrait déclencher des coups ; plus haut, on raterait les coups doux ;
+# - anti-rebond 0,20 s, contre 0,15 : le pied va moins vite qu'une main, donc deux coups
+#   à moins de 0,2 s sont plus probablement un rebond ou un tremblement de la pointe
+#   près du plan qu'un vrai double coup ;
+# - plan de frappe à 100 px : vers le milieu de l'image (90 px en 16:9, 120 en 4:3),
+#   là où la pointe se lève et retombe. À régler en regardant l'aperçu, pas avant.
+FOOT = TargetPreset(
+    label="pied",
+    element_id="kick",
+    color_range=MARKER_COLOR,
+    strike_plane_y=100.0,
+    min_speed_px_per_s=80.0,
+    refractory_s=0.20,
+)
+
+# -----------------------------------------------------------------------------
+
+TARGETS: dict[str, TargetPreset] = {"stick": STICK, "foot": FOOT}
+DEFAULT_TARGET = "stick"
 
 WINDOW_SIZE = (900, 560)
 PREVIEW_ORIGIN = (20, 20)
@@ -41,6 +95,23 @@ HIT_COLOR = (120, 220, 140)
 NO_SIGNAL_COLOR = (90, 90, 100)
 
 
+def add_target_argument(parser: argparse.ArgumentParser) -> None:
+    """Ajoute ``--target stick|foot`` (partagé avec ``vision_measure.py``)."""
+    parser.add_argument(
+        "--target",
+        choices=list(TARGETS),
+        default=DEFAULT_TARGET,
+        help="ce qu'on suit : stick = baguette (défaut), foot = pointe du pied (grosse caisse)",
+    )
+
+
+def parse_arguments(argv: list[str] | None = None) -> TargetPreset:
+    """Lit la ligne de commande et renvoie le préréglage de la cible choisie."""
+    parser = argparse.ArgumentParser(description="Écran de débogage vision (phase 03).")
+    add_target_argument(parser)
+    return TARGETS[parser.parse_args(argv).target]
+
+
 def _frame_to_surface(frame_bgr: np.ndarray) -> pygame.Surface:
     """Convertit une image OpenCV (BGR, hauteur×largeur) en surface pygame."""
     rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
@@ -53,18 +124,23 @@ def _format_point(sample: VisionSample | None) -> str:
     return f"({sample.point.x:.0f}, {sample.point.y:.0f})  aire {sample.point.area:.0f} px²"
 
 
-def run() -> None:
+def run(target: TargetPreset = STICK) -> None:
     pygame.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
-    pygame.display.set_caption("Batterie — débogage vision")
+    pygame.display.set_caption(f"Batterie — débogage vision ({target.label})")
     font = pygame.font.SysFont("consolas", 20)
     title_font = pygame.font.SysFont("consolas", 22, bold=True)
 
     sample_queue: mp.Queue = mp.Queue(maxsize=4)
     process = mp.Process(
         target=run_vision_process,
-        args=(sample_queue, COLOR_RANGE, STRIKE_PLANE_Y),
-        kwargs={"element_id": ELEMENT_ID, "send_frames": True},
+        args=(sample_queue, target.color_range, target.strike_plane_y),
+        kwargs={
+            "element_id": target.element_id,
+            "min_speed_px_per_s": target.min_speed_px_per_s,
+            "refractory_s": target.refractory_s,
+            "send_frames": True,
+        },
         daemon=True,
     )
     process.start()
@@ -95,7 +171,7 @@ def run() -> None:
             if latest is not None and latest.frame_preview is not None:
                 surface = _frame_to_surface(latest.frame_preview)
                 screen.blit(surface, PREVIEW_ORIGIN)
-                plane_y = PREVIEW_ORIGIN[1] + int(STRIKE_PLANE_Y)
+                plane_y = PREVIEW_ORIGIN[1] + int(target.strike_plane_y)
                 plane_start = (PREVIEW_ORIGIN[0], plane_y)
                 plane_end = (PREVIEW_ORIGIN[0] + surface.get_width(), plane_y)
                 pygame.draw.line(screen, PLANE_COLOR, plane_start, plane_end, 2)
@@ -109,6 +185,7 @@ def run() -> None:
                 screen.blit(waiting, (PREVIEW_ORIGIN[0], PREVIEW_ORIGIN[1] + 100))
 
             lines = [
+                f"Cible : {target.label} ({target.element_id})",
                 f"Coups détectés : {hit_count}",
                 "",
                 f"Position : {_format_point(latest)}",
@@ -121,7 +198,8 @@ def run() -> None:
                 ),
                 "",
                 "Échap pour quitter.",
-                "Calibration : édite COLOR_RANGE / STRIKE_PLANE_Y en haut du fichier.",
+                "Calibration : édite le préréglage STICK / FOOT",
+                "en haut de tools/vision_debug.py, puis relance.",
             ]
             for i, line in enumerate(lines):
                 text_surface = font.render(line, True, TEXT_COLOR)
@@ -135,8 +213,8 @@ def run() -> None:
         pygame.quit()
 
 
-def main() -> int:
-    run()
+def main(argv: list[str] | None = None) -> int:
+    run(parse_arguments(argv))
     return 0
 
 

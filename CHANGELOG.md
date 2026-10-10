@@ -5,6 +5,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+### Added
+
+- Test du pied avec la webcam intégrée au sol (phase 03, PR 4, informatif) : argument `--target stick|foot` (défaut `stick`) dans `tools/vision_debug.py` et `tools/vision_measure.py`, préréglages de cible regroupés en haut de `vision_debug.py` (élément, couleur, plan de frappe, vitesse minimale, anti-rebond) avec un préréglage pied non calibré, protocole de mesure du pied dans la page de la phase 03, options de disposition des caméras et section « pied » dans l'ADR 0002 (à remplir avec tes mesures).
+
+### Changed
+
+- `input/vision/process.py` transmet la vitesse minimale et l'anti-rebond au détecteur de coup. Dans `tools/vision_debug.py`, les constantes `COLOR_RANGE`, `STRIKE_PLANE_Y` et `ELEMENT_ID` deviennent le préréglage `STICK` (mêmes valeurs).
+- Cadrage : disposition des caméras du 2026-10-10 (webcam 60 images/s d'occasion en hauteur pour les mains, webcam intégrée au sol pour les pieds, pédales au clavier USB en secours ; « cadrage large » abandonné) et correction du prix de la C922 (70 à 99 € neuve, ~40 € d'occasion).
+
 ## [0.3.0] - 2026-10-10
 
 Phase 03 — Vision : preuve de concept (V3.0) : une baguette à embout coloré, suivie par la webcam intégrée, détectée assez vite et assez sûrement pour continuer.
