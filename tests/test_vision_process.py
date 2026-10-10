@@ -14,6 +14,7 @@ from batterie.input.vision.process import (
     track_and_detect,
     track_markers,
 )
+from batterie.input.vision.zones import Zone, ZoneMap
 
 IMAGE_SIZE = 200
 
@@ -298,3 +299,59 @@ def test_run_markers_process_pushes_every_sample_with_both_hands():
     assert len(queue.items) == 3
     assert set(queue.items[0].markers) == {"left", "right"}
     assert sum(len(sample.hit_events) for sample in queue.items) == 2
+
+
+# --- Zones : attribution à l'élément dans le pipeline (phase 04) ---
+
+
+def _zones_for_two_hand_frames() -> ZoneMap:
+    """Image de test 200x200 : snare autour de x=50 (main orange), ride autour de x=150 (verte)."""
+    return ZoneMap(
+        (
+            Zone("snare", 20, 80, y_top=40, strike_plane_y=PLANE_Y, y_bottom=180),
+            Zone("ride", 120, 180, y_top=40, strike_plane_y=PLANE_Y, y_bottom=180),
+        )
+    )
+
+
+def test_markers_with_zones_hit_the_element_of_the_zone_they_strike():
+    zones = _zones_for_two_hand_frames()
+    specs = [
+        MarkerSpec("left", ORANGE, PLANE_Y, zones=zones),
+        MarkerSpec("right", GREEN, PLANE_Y, zones=zones),
+    ]
+    frames = [
+        _two_hand_frame(50, 50),
+        _two_hand_frame(70, 50),
+        _two_hand_frame(150, 50),  # la main orange (x=50) frappe : snare
+        _two_hand_frame(150, 70),
+        _two_hand_frame(150, 150),  # la main verte (x=150) frappe : ride
+    ]
+    samples = list(track_markers(iter(frames), specs, now_ns=_FakeClock()))
+
+    hits = [
+        (i, name, m.hit_event.element_id)
+        for i, s in enumerate(samples)
+        for name, m in s.markers.items()
+        if m.hit_event is not None
+    ]
+    assert hits == [(2, "left", "snare"), (4, "right", "ride")]
+
+
+def test_a_hand_outside_every_zone_hits_nothing_even_when_it_crosses_the_plane():
+    zones = ZoneMap((Zone("ride", 120, 180, y_top=40, strike_plane_y=PLANE_Y, y_bottom=180),))
+    specs = [MarkerSpec("left", ORANGE, PLANE_Y, zones=zones)]  # la main orange est à x=50
+    frames = [_two_hand_frame(50, None), _two_hand_frame(70, None), _two_hand_frame(150, None)]
+    samples = list(track_markers(iter(frames), specs, now_ns=_FakeClock()))
+    assert all(s.markers["left"].hit_event is None for s in samples)
+
+
+def test_each_hand_has_its_own_rearming_state_with_shared_zones():
+    zones = _zones_for_two_hand_frames()
+    specs = [
+        MarkerSpec("left", ORANGE, PLANE_Y, zones=zones),
+        MarkerSpec("right", GREEN, PLANE_Y, zones=zones),
+    ]
+    frames = [_two_hand_frame(50, 50), _two_hand_frame(70, 70), _two_hand_frame(150, 150)]
+    *_, last = track_markers(iter(frames), specs, now_ns=_FakeClock())
+    assert sorted(e.element_id for e in last.hit_events) == ["ride", "snare"]

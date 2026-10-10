@@ -36,14 +36,14 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [x] `input/vision/process.py` : un marqueur et un détecteur de coup **par main** (anti-rebond propre à chaque main), `VisionSample` porte les points et les coups par main ; image **retournée en miroir** pour que ta main gauche apparaisse à gauche, comme sur le kit
 - [x] `tools/vision_debug.py --target hands` : deux points suivis (orange, vert), vitesse et compteur de coups par main
 - [x] Tests : images synthétiques à deux marqueurs, coups indépendants par main, miroir, et teintes de peau synthétiques **non** suivies par l'orange
-- [ ] Nécessite ta webcam : vérifier que l'orange suit ton embout sans s'accrocher à ta main, à ton visage ni à ton fond
+- [x] Nécessite ta webcam : essayé par toi le 2026-10-10, « tout est parfait » (orange et vert suivis, rien d'accroché à ta main, ton visage ni ton fond)
 
 **PR 2 — Zones, attribution à l'élément et anti-double-coup** (`feat/vision-zones`) — logique pure
-- [ ] `input/vision/zones.py` : `Zone` (élément, rectangle dans l'image, plan de frappe) et leur validation (pas de chevauchement en largeur, un élément une seule fois)
-- [ ] Détecteur de coup par zone : un coup = franchissement vers le bas du plan d'une zone, **point de franchissement dans le rectangle de la zone**, un seul coup par geste
-- [ ] **Anti-double-coup** : ré-armement seulement après une remontée du marqueur au-dessus du plan (hystérésis), en plus de l'anti-rebond temporel ; une frappe en diagonale ne déclenche qu'un élément
-- [ ] `config/zones.py` : lecture et écriture de `zones.toml` dans `%APPDATA%\Batterie` (fichier séparé de `settings.toml`, voir ADR 0003), erreurs claires
-- [ ] Tests : mains qui alternent sur 4 zones, rebond et tremblement ignorés, diagonale, validation, aller-retour de lecture/écriture
+- [x] `input/vision/zones.py` : `Zone` (élément, rectangle dans l'image, plan de frappe) et leur validation (pas de chevauchement en largeur, un élément une seule fois)
+- [x] Détecteur de coup par zone : un coup = franchissement vers le bas du plan d'une zone, **point de franchissement dans le rectangle de la zone**, un seul coup par geste
+- [x] **Anti-double-coup** : ré-armement seulement après une remontée du marqueur au-dessus du plan (hystérésis), en plus de l'anti-rebond temporel ; une frappe en diagonale ne déclenche qu'un élément
+- [x] `config/zones.py` : lecture et écriture de `zones.toml` dans `%APPDATA%\Batterie` (fichier séparé de `settings.toml`, voir ADR 0003), erreurs claires
+- [x] Tests : mains qui alternent sur 4 zones, rebond et tremblement ignorés, diagonale, validation, aller-retour de lecture/écriture
 
 **PR 3 — Écran de calibration guidée** (`feat/vision-calibration`) — M11
 - [ ] `input/vision/calibration.py` (logique pure) : à partir de quelques coups enregistrés sur un élément, calcule sa zone (rectangle avec marge, plan de frappe réglé sur la course réelle du geste)
@@ -101,6 +101,9 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 
 ## Écarts par rapport au plan
 
+- **PR 2 — les zones sont branchées dans le processus vision dès cette PR.** Le plan ne prévoyait que la logique pure, mais le coup est détecté dans le processus vision (c'est lui qui voit les images, cadrage §4.1) : `MarkerSpec` accepte donc des `zones`, et un `ZoneStrikeDetector` par main attribue chaque coup à l'élément frappé. Ça permet aussi de tester l'attribution à travers le vrai pipeline, sur des images synthétiques à deux mains. Rien n'est encore utilisé par les outils ni par l'application : les zones n'existent pas avant la calibration (PR 3).
+- **PR 2 — ré-armement : valeurs de départ.** Après un coup, la main doit remonter au-dessus du plan d'un quart de la hauteur de la zone (au moins 4 px) avant de pouvoir frapper de nouveau, en plus de l'anti-rebond de 0,15 s. Conséquence à garder en tête : un geste dont l'amplitude est inférieure à cette marge ne se ré-arme pas ; la calibration (PR 3) règle le haut de chaque zone sur la course réelle du geste. Quart et minimum sont à ajuster en jouant (PR 4).
+- **PR 2 — `y_bottom` ne sert pas à la détection.** Le bas de la zone est enregistré pour l'affichage et la calibration (PR 3) ; seuls `x_min`, `x_max`, le plan et la hauteur au-dessus du plan interviennent dans le coup.
 - **PR 1 — `VisionSample` change de forme.** Il porte un échantillon par embout (`markers`) au lieu d'un seul point : c'est le minimum pour suivre deux mains, et les raccourcis `point`, `velocity_px_per_s` et `hit_event` (premier embout) gardent la baguette et le pied inchangés. Dans les outils, `TargetPreset` regroupe maintenant un ou plusieurs `MarkerPreset` ; les deux mains portent le même élément (`snare`) jusqu'aux zones de la PR 2.
 - **PR 1 — l'orange est réglé par la saturation.** Teinte de l'orange et de la peau confondues, c'est une saturation minimale élevée (160) qui les sépare ; un orange pâle n'est donc volontairement pas suivi. Valeurs de départ, non calibrées, vérifiées seulement sur des teintes de peau synthétiques.
 

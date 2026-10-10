@@ -30,6 +30,7 @@ from batterie.input.vision.strike_detector import (
     DEFAULT_REFRACTORY_S,
     StrikeDetector,
 )
+from batterie.input.vision.zones import ZoneMap, ZoneStrikeDetector
 
 WORKING_WIDTH = 320
 
@@ -38,7 +39,12 @@ SINGLE_MARKER_NAME = "marker"
 
 @dataclass(frozen=True)
 class MarkerSpec:
-    """Un embout à suivre : sa couleur, son plan de frappe et les seuils de son détecteur."""
+    """Un embout à suivre : sa couleur, son plan de frappe et les seuils de son détecteur.
+
+    Avec ``zones``, le coup est attribué à l'élément de la zone frappée (détecteur par zone,
+    avec ré-armement) ; ``strike_plane_y`` et ``element_id`` ne servent alors plus qu'à
+    l'affichage de débogage. Sans zones, un seul plan et un seul élément (baguette, pied).
+    """
 
     name: str  # identifiant dans ``VisionSample.markers`` (« left », « right », ...)
     color_range: ColorRange
@@ -46,6 +52,7 @@ class MarkerSpec:
     element_id: str = "snare"
     min_speed_px_per_s: float = DEFAULT_MIN_SPEED_PX_PER_S
     refractory_s: float = DEFAULT_REFRACTORY_S
+    zones: ZoneMap | None = None
 
 
 @dataclass(frozen=True)
@@ -120,6 +127,13 @@ class _MarkerState:
 
     def __init__(self, spec: MarkerSpec, detector: StrikeDetector | None) -> None:
         self.spec = spec
+        self.zone_detector: ZoneStrikeDetector | None = None
+        if spec.zones is not None:
+            self.zone_detector = ZoneStrikeDetector(
+                spec.zones,
+                min_speed_px_per_s=spec.min_speed_px_per_s,
+                refractory_s=spec.refractory_s,
+            )
         self.detector = detector or StrikeDetector(
             strike_plane_y=spec.strike_plane_y,
             min_speed_px_per_s=spec.min_speed_px_per_s,
@@ -137,12 +151,16 @@ class _MarkerState:
                 dt_s = (t_ns - self.last_t_ns) / 1_000_000_000
                 if dt_s > 0:
                     velocity = (point.y - self.last_point.y) / dt_s
-            if self.detector.update(t_ns / 1_000_000_000, point.y):
+            t_s = t_ns / 1_000_000_000
+            element_id: str | None = None
+            if self.zone_detector is not None:
+                zone = self.zone_detector.update(t_s, point.x, point.y)
+                element_id = zone.element_id if zone is not None else None
+            elif self.detector.update(t_s, point.y):
+                element_id = self.spec.element_id
+            if element_id is not None:
                 hit_event = HitEvent(
-                    element_id=self.spec.element_id,
-                    velocity=1.0,
-                    t_ns=t_ns,
-                    source=Source.VISION,
+                    element_id=element_id, velocity=1.0, t_ns=t_ns, source=Source.VISION
                 )
             self.last_point = point
             self.last_t_ns = t_ns
