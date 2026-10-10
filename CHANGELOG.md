@@ -5,15 +5,6 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
-### Added
-
-- Test du pied avec la webcam intégrée au sol (phase 03, PR 4, informatif) : argument `--target stick|foot` (défaut `stick`) dans `tools/vision_debug.py` et `tools/vision_measure.py`, préréglages de cible regroupés en haut de `vision_debug.py` (élément, couleur, plan de frappe, vitesse minimale, anti-rebond) avec un préréglage pied non calibré, protocole de mesure du pied dans la page de la phase 03, options de disposition des caméras et section « pied » dans l'ADR 0002 (à remplir avec tes mesures).
-
-### Changed
-
-- `input/vision/process.py` transmet la vitesse minimale et l'anti-rebond au détecteur de coup. Dans `tools/vision_debug.py`, les constantes `COLOR_RANGE`, `STRIKE_PLANE_Y` et `ELEMENT_ID` deviennent le préréglage `STICK` (mêmes valeurs).
-- Cadrage : disposition des caméras du 2026-10-10 (webcam 60 images/s d'occasion en hauteur pour les mains, webcam intégrée au sol pour les pieds, pédales au clavier USB en secours ; « cadrage large » abandonné) et correction du prix de la C922 (70 à 99 € neuve, ~40 € d'occasion).
-
 ## [0.3.0] - 2026-10-10
 
 Phase 03 — Vision : preuve de concept (V3.0) : une baguette à embout coloré, suivie par la webcam intégrée, détectée assez vite et assez sûrement pour continuer.
@@ -24,10 +15,17 @@ Phase 03 — Vision : preuve de concept (V3.0) : une baguette à embout coloré,
 - Processus caméra et écran de débogage (phase 03, PR 2) : `input/vision/process.py` (capture dans un processus séparé, file de `VisionSample`), `tools/vision_debug.py` (aperçu caméra, plan de frappe, vitesse, images/s, latence, compteur de coups) — à calibrer et essayer avec ta webcam.
 - Séance de mesure vision (phase 03, PR 3) : `tools/vision_measure.py` (métronome à 80 BPM, 4 clics de décompte puis 50 coups ; séance caméra et séance clavier de référence ; coups détectés, faux coups, images/s réelles, temps de traitement, retard de la caméra par rapport au clavier ; mode `--simulate` sans caméra), logique de comptage dans `input/vision/measure.py`. Protocole de mesure dans la page de la phase 03 ; ADR 0002 (go/no-go et choix de caméra) créé, en attente des mesures.
 - ADR 0002 (go/no-go et choix de caméra) : décision **go, sans achat de caméra pour l'instant**, grille de lecture et mesures consignées.
+- Test du pied avec la webcam intégrée au sol (phase 03, PR 4, informatif) : argument `--target stick|foot` (défaut `stick`) dans `tools/vision_debug.py` et `tools/vision_measure.py`, préréglages de cible regroupés en haut de `vision_debug.py` (élément, couleur, plan de frappe, vitesse minimale, anti-rebond) avec un préréglage pied non calibré, protocole de mesure du pied dans la page de la phase 03, options de disposition des caméras et section « pied » dans l'ADR 0002 (à remplir avec tes mesures).
+
+### Changed
+
+- `input/vision/process.py` transmet la vitesse minimale et l'anti-rebond au détecteur de coup. Dans `tools/vision_debug.py`, les constantes `COLOR_RANGE`, `STRIKE_PLANE_Y` et `ELEMENT_ID` deviennent le préréglage `STICK` (mêmes valeurs).
+- Cadrage : disposition des caméras du 2026-10-10 (webcam 60 images/s d'occasion en hauteur pour les mains, webcam intégrée au sol pour les pieds, pédales au clavier USB en secours ; « cadrage large » abandonné) et correction du prix de la C922 (70 à 99 € neuve, ~40 € d'occasion).
 
 ### Validated
 
 - Testé en jouant par l'utilisateur avec une brosse à dents verte comme embout : suivi sans décrochage, passage du plan de frappe détecté, compteur de coups juste ; séance de mesure de 50 coups à 80 BPM : 48 à 50 détectés, 0 faux coup, 31,2 images/s réelles, retard par rapport au clavier ≤ 55 ms.
+- Test du pied par l'utilisateur (informatif, webcam intégrée au sol à 60–70 cm, une séance) : marqueur vu sur 100 % des images, 0 faux coup, 31,0 images/s ; 41 coups sur 50 comptés, les 9 autres n'ayant pas été joués selon l'utilisateur (ruban décollé) ; retard de +109 ms par rapport au clavier, trop élevé pour conclure : décision pour les pieds repoussée à une séance de confirmation (ADR 0002).
 
 ## [0.2.0] - 2026-10-09
 

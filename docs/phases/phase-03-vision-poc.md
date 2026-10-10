@@ -67,7 +67,7 @@ critère de fin (détection, latence, décision go/no-go).
 - [x] Tests : trajectoires de pied synthétiques (faible amplitude, plus lentes), sélection du préréglage, transmission des seuils
 - [x] Protocole pied consigné dans cette page
 - [x] ADR 0002 : options de disposition des caméras et section « pied » à remplir
-- [ ] Nécessite ton ordinateur au sol et ta webcam : séance pied et chiffres relevés dans l'ADR 0002
+- [x] Nécessite ton ordinateur au sol et ta webcam : séance pied faite le 2026-10-10, chiffres et lecture dans l'ADR 0002 (suivi correct, mais retard de +109 ms par rapport au clavier et une seule séance, ruban décollé : décision pieds repoussée à une séance de confirmation avant la phase 05)
 
 ## Critères de fin (Definition of Done)
 
@@ -235,3 +235,8 @@ pas si le kit complet (pieds et mains en même temps) tient.
 - Je ne pouvais ni voir ta caméra ni tester avec ta baguette : tout ce qui touche à la réalité (couleur, lumière, tenue du suivi) reposait sur ton essai. Ça a marché, mais la phase s'est jouée en un aller-retour de test plutôt qu'en itérations rapides.
 - Les résultats ont été rapportés de mémoire, en tranches (≤ 55 ms, 48 à 50 coups) plutôt qu'en valeurs exactes, et la lumière n'a pas été consignée. Suffisant pour décider, mais l'ADR le dit explicitement et ses réserves en tiennent compte. Faire écrire à l'outil ses résultats dans un fichier rendrait la prochaine mesure exacte.
 - Le critère de la phase (90 % sur 50 coups à 80 BPM, une baguette) est nettement plus léger que US7 (95 % sur 100 coups à 90 BPM, plusieurs éléments) : « go » ne veut pas dire que US7 est acquise, seulement que l'approche est assez prometteuse pour continuer.
+
+**Addendum — test du pied (PR 4)**
+
+- Le suivi du pied avec la webcam intégrée au sol a fonctionné du premier coup avec le préréglage non calibré (marqueur vu sur 100 % des images, 0 faux coup, 31 images/s), mais le retard mesuré est élevé (+109 ms par rapport au clavier, contre ≤ 55 ms pour la baguette) et la séance est unique. Ni confirmation ni infirmation de l'option « webcam intégrée au sol » : l'ADR 0002 repousse la décision pour les pieds à une séance de confirmation.
+- Le ruban adhésif s'est décollé de la chaussure en cours de séance : 9 coups sur 50 n'ont pas été joués (selon toi), et l'outil n'a aucun moyen de les distinguer de coups ratés. Pour les prochaines mesures : fixer le marqueur mieux qu'avec un simple ruban.
