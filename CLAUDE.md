@@ -25,6 +25,7 @@ uv run pytest                            # tests
 uv run ruff check . --fix                # lint
 uv run ruff format .                     # formatage
 uv run python tools/latency_probe.py     # mesure de latence (créé en phase 01)
+uv run python tools/vision_measure.py    # séance de mesure vision, ouvre la webcam (--simulate : sans caméra)
 ```
 
 ## 4. Structure

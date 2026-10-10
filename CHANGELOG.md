@@ -9,6 +9,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 - Suivi de couleur et détection de coup (phase 03, PR 1) : `core/events.py` (`HitEvent`/`Source`), `input/vision/color_tracker.py` (suivi HSV d'un embout coloré) et `input/vision/strike_detector.py` (détection d'un coup au franchissement d'un plan de frappe), logique pure testée sur des images et trajectoires synthétiques, sans caméra.
 - Processus caméra et écran de débogage (phase 03, PR 2) : `input/vision/process.py` (capture dans un processus séparé, file de `VisionSample`), `tools/vision_debug.py` (aperçu caméra, plan de frappe, vitesse, images/s, latence, compteur de coups) — à calibrer et essayer avec ta webcam.
+- Séance de mesure vision (phase 03, PR 3) : `tools/vision_measure.py` (métronome à 80 BPM, 4 clics de décompte puis 50 coups ; séance caméra et séance clavier de référence ; coups détectés, faux coups, images/s réelles, temps de traitement, retard de la caméra par rapport au clavier ; mode `--simulate` sans caméra), logique de comptage dans `input/vision/measure.py`. Protocole de mesure dans la page de la phase 03 ; ADR 0002 (go/no-go et choix de caméra) créé, en attente des mesures.
 
 ## [0.2.0] - 2026-10-09
 
