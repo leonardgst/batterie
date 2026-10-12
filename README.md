@@ -11,7 +11,7 @@ Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui d�
 | --- | --- | --- |
 | V1 | Batterie au clavier | Terminé (`v0.1.0`) |
 | V2 | Partitions qui défilent | Terminé (`v0.2.0`) |
-| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept validée (`v0.3.0`) ; deux mains en cours (phase 04) |
+| V3 | Jeu à la caméra (mains, puis pieds) | Deux mains terminées (`v0.4.0`) ; pieds à venir (phase 05) |
 
 ## Installation (Windows)
 

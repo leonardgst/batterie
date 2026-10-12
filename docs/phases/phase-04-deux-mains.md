@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| En cours (cadrée le 2026-10-10) | 6 à 10 h de ton temps | — | v0.4.0 |
+| Terminée (2026-10-12) | 6 à 10 h de ton temps | 2026-10-12 | v0.4.0 (à poser sur `main` après fusion de la PR de clôture) |
 
 ## Objectif
 
@@ -26,8 +26,8 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 ## Prérequis
 
 - [x] Couleurs : main gauche orange, main droite verte (embout vert : ta brosse à dents de la phase 03)
-- [ ] Un embout **bleu fluo** (surligneur bleu, pas un bleu terne ou sombre), pour la main gauche (c'était un orange vif avant le 2026-10-12)
-- [ ] Phase découpée en PR (fait par ce document)
+- [x] Un embout **bleu fluo** (surligneur bleu, pas un bleu terne ou sombre), pour la main gauche (c'était un orange vif avant le 2026-10-12)
+- [x] Phase découpée en PR (fait par ce document)
 
 ## Livrables
 
@@ -50,32 +50,32 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [x] Écran dans l'application (entrée « Calibrer la caméra » à l'accueil) : aperçu miroir avec les zones au fur et à mesure, « Frappe : Caisse claire — coup 2 / 3 », liste des éléments faits, R pour recommencer un élément, validation par Entrée ; Échap abandonne sans rien écraser ; enregistre `zones.toml`
 - [x] Les zones restent affichées sur l'aperçu pendant le jeu (voir si tu as bougé depuis la calibration) — fonction de dessin livrée ici (`ui/camera_view.py`), utilisée dans le jeu à la PR 4
 - [x] ADR 0003 : zones en rectangles, calibration guidée par des frappes (pas de dessin à la souris), `zones.toml` séparé
-- [ ] Nécessite ta webcam : calibrer tes 4 zones et vérifier qu'elles tiennent
+- [x] Nécessite ta webcam : calibrer tes 4 zones et vérifier qu'elles tiennent
 
 **PR 4 — Jouer à la caméra dans l'application** (`feat/vision-play`) — M9
 - [x] `input/vision/source.py` : démarre le processus vision, lit sa file à chaque tour de boucle (≥ 500 Hz), transmet les `HitEvent` ; le son est joué **dès la lecture de l'événement**, jamais depuis le rendu (CLAUDE.md §9)
 - [x] Entrée « Jeu caméra » à l'accueil : le kit s'illumine et sonne au rythme de tes coups ; état de la caméra visible (images/s) ; message clair si la caméra est absente, occupée, ou si aucune zone n'est calibrée
 - [x] `config/settings.py` : section facultative `[camera]` (numéro de caméra, résolution, images/s demandées, MJPEG) ; l'application demande et affiche ce qu'elle obtient réellement. Les `settings.toml` existants restent valables tels quels
 - [x] Tests : file simulée → sons joués, caméra perdue, pas de zones
-- [ ] Nécessite ta webcam : jouer librement, dire si le retard se sent
-- [ ] **Point de décision caméra** : ton ressenti, plus les images/s réelles, nourrissent la décision d'achat (ADR 0004)
+- [x] Nécessite ta webcam : jouer librement, dire si le retard se sent
+- [x] **Point de décision caméra** : ton ressenti, plus les images/s réelles, nourrissent la décision d'achat (ADR 0004)
 
 **PR 5 — Protocole et outil de mesure US7** (`feat/vision-us7`)
 - [x] `input/vision/measure.py` : séance où chaque clic a un élément attendu ; calcule coups détectés, faux coups et **attribution** (bon élément ou non), en plus des latences existantes ; tests sur des séries synthétiques
 - [x] `tools/vision_measure.py --pattern` : 100 croches à 90 BPM, motif de 8 croches répété sur les 4 éléments, mains en alternance ; décompte et métronome audibles, résultat à la fin. Sans son sur tes coups (comme en phase 03, sinon tu cales ton geste sur le son et le retard disparaît de la mesure) ; la latence geste → son s'obtient en ajoutant les ≈ 5 ms du moteur audio (ADR 0001)
 - [x] Protocole consigné dans cette page (section « Protocole de mesure US7 » ci-dessous)
-- [ ] Nécessite ta webcam : séances de 100 coups, chiffres relevés
+- [x] Nécessite ta webcam : séances de 100 coups, chiffres relevés
 
 **PR 6 — Nuance : la vitesse du geste règle le volume** (`feat/vision-velocity`) — S7, *Should*
 - [x] `input/vision/velocity.py` : vitesse du geste → vélocité 0 à 1, courbe réglable (`[velocity]` de `settings.toml`), testée ; utilisée par le moteur audio (qui accepte déjà une vélocité). L'écran « Jeu caméra » affiche la vitesse et le volume du dernier coup pour régler la courbe
 - [x] Livrée (les PR 1 à 5 tenaient le budget de temps ; elle ne bloque pas la clôture)
-- [ ] Nécessite ta webcam : jouer doucement puis fort, régler `soft_speed` / `hard_speed` d'après l'écran, dire si la nuance se sent et si elle te plaît (sinon `enabled = false`)
+- [x] Nécessite ta webcam : jouer doucement puis fort, régler `soft_speed` / `hard_speed` d'après l'écran, dire si la nuance se sent et si elle te plaît (sinon `enabled = false`)
 
 **PR 7 — Diagnostic des coups manqués** (`feat/vision-diagnosis`) — ajoutée le 2026-10-12, après tes premières séances US7 (voir « Écarts »)
 - [x] `input/vision/diagnosis.py` (logique pure) : pour chaque clic manqué, rejoue la trajectoire de l'embout autour du clic et donne la cause probable : embout non vu, plan jamais atteint (de combien de pixels), plan franchi hors de la zone, trop lent, main pas assez remontée, rien d'anormal
 - [x] `measure.py` et `tools/vision_measure.py` : détection **position par position** du motif et **main par main**, causes des coups manqués dans le rapport ; une latence négative (détection *avant* la référence clavier) n'est plus rapportée comme « atteint » mais « à interpréter »
 - [x] Tests : trajectoires synthétiques pour chaque cause, séance complète avec une position qui rate, latences en avance / en retard
-- [ ] Nécessite ta webcam : refaire des séances, me donner le rapport avec les causes
+- [x] Nécessite ta webcam : refaire des séances, me donner le rapport avec les causes
 
 **Clôture** (PR de documentation, comme en phases 01 à 03) : ADR 0004 (décision d'achat de la caméra des mains, avec tes chiffres), cases cochées, rétrospective, CHANGELOG `[0.4.0]`, tag `v0.4.0` après fusion.
 
@@ -95,11 +95,11 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 
 ## Critères de fin (Definition of Done)
 
-- [ ] Tests au vert (CI Windows)
-- [ ] Documentation à jour (README, CHANGELOG, journal)
-- [ ] US7 sur charleston fermée, caisse claire, tom médium et ride, deux mains (mesuré, toi devant la caméra, 100 croches à 90 BPM) : ≥ 95 % détectés, ≤ 2 % de faux coups, ≥ 95 % attribués au bon élément, latence geste → son ≤ 60 ms
-- [ ] Zones calibrables depuis l'application (M11)
-- [ ] Décision d'achat (ou non) d'une caméra consignée dans l'ADR 0004
+- [x] Tests au vert (CI Windows)
+- [x] Documentation à jour (README, CHANGELOG, journal)
+- [x] US7 sur charleston fermée, caisse claire, tom médium et ride, deux mains (mesuré, toi devant la caméra, 100 croches à 90 BPM) : ≥ 95 % détectés, ≤ 2 % de faux coups, ≥ 95 % attribués au bon élément, latence geste → son ≤ 60 ms — **tenu dans 2 séances sur 3 à 90 BPM** (98 %, 86 %, 99 % détectés ; faux coups 1, 1, 0 ; 100 %, 100 %, 99 % sur le bon élément ; latence +17 ms sur la seule séance exploitable) ; la séance à 86 % a une cause identifiée (caisse claire de la main gauche, plan non atteint). Détail et réserves : [ADR 0004](../adr/0004-camera-des-mains.md)
+- [x] Zones calibrables depuis l'application (M11)
+- [x] Décision d'achat (ou non) d'une caméra consignée dans l'ADR 0004
 
 ## Protocole de mesure US7
 
@@ -150,8 +150,8 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 ## Décisions prises (liens vers les ADR)
 
 - [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) (héritée de la phase 03)
-- [ADR 0003 — Zones de frappe et calibration par frappes guidées](../adr/0003-zones-et-calibration.md) — proposé, à confirmer par ton essai de la PR 3
-- ADR 0004 (caméra des mains : achat ou non) — à écrire à la clôture
+- [ADR 0003 — Zones de frappe et calibration par frappes guidées](../adr/0003-zones-et-calibration.md) — accepté (confirmé par ton essai)
+- [ADR 0004 — Caméra des mains : acheter une webcam 60 images/s ou garder la webcam intégrée](../adr/0004-camera-des-mains.md) — proposé : **ne rien acheter maintenant, décider au début de la phase 05**
 
 ## Écarts par rapport au plan
 
@@ -178,4 +178,27 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 
 ## Rétrospective : ce qui a marché, ce qui a coincé
 
-_À remplir à la clôture._
+_Rédigée à la clôture, le 2026-10-12._
+
+**Ce qui a marché**
+
+- Le découpage en PR a permis de tout construire et tester sans caméra, puis de ne demander à l'utilisateur que des essais ciblés. La logique pure (zones, calibration, mesure, diagnostic, nuance) est couverte par des trajectoires et des images synthétiques ; le vrai processus vision a été essayé de bout en bout avec une caméra fictive à chaque PR.
+- **Le diagnostic des coups manqués (PR 7, non prévue) a payé tout de suite** : à la séance suivante, 50 % de coups détectés avec l'autre instrument bleu étaient expliqués par « embout non vu » sur chaque coup de la main gauche, et les ratés de la caisse claire de la main gauche étaient localisés à deux positions du motif. Sans lui, on aurait cherché du côté des zones ou du détecteur.
+- Mesurer d'abord ce qu'on croit comprendre : l'audio de la nuance (sortie du mixeur mesurée avec le pilote SDL « disk ») a montré que le moteur appliquait bien le volume, ce qui a orienté vers la vraie cause, une courbe trop plate.
+- Les rapports de l'utilisateur étaient cette fois **le texte exact de l'outil**, pas des valeurs de mémoire : l'ADR 0004 s'appuie sur de vrais chiffres, séance par séance.
+- La séance simulée (`--simulate`, `--pattern --simulate`) a permis de voir tout le déroulé, l'écran de résultat et les cas d'erreur sans ouvrir la webcam.
+
+**Ce qui a coincé**
+
+- **Trois fautes de ma part, trouvées par l'essai de l'utilisateur** : la courbe de nuance était linéaire en amplitude (10 dB seulement, à peine audible : corrigée en décibels, PR 27) ; le rapport de mesure écrivait « atteint » pour une latence négative (une détection *avant* le clavier n'est pas un succès : corrigé en PR 7) ; et les sons du kit étaient équilibrés à la crête, pas à l'oreille (charleston fermée, puis caisse claire, trop faibles : corrigés en énergie pondérée A, PR 29 et 30). Dans les trois cas, le défaut était visible dès la conception si j'avais posé la question « que verra ou entendra l'utilisateur ? ».
+- **Le choix des couleurs a pris trois essais** : orange (proche de la peau), puis rose (« pas bien choisi » après essai), puis bleu fluo, avec le jaune réservé au pied. Les plages de teinte étaient justifiées par des tests de non-accrochage à la peau, mais seule la caméra de l'utilisateur pouvait trancher.
+- **La lumière n'a pas été consignée** ni variée pendant les mesures : la condition « cadence ou détection qui chutent en lumière faible » de l'ADR 0002 reste non testée. À noter au début de la prochaine série.
+- **Résultats variables d'une séance à l'autre** (86 % à 99 % dans les mêmes conditions) : un seul essai ne suffit pas, et le critère n'est pas tenu de façon régulière. Les causes (course de la caisse claire de la main gauche) sont identifiées, pas encore corrigées.
+- Le tempo du critère (90 BPM) a été jugé rapide par l'utilisateur, qui s'est entraîné à 70 ; les séances à 70 BPM ne valent pas pour US7. Il en a fait d'abord avec un plan calé sur des gestes plus appuyés que son jeu (51 %, 58 %), avant de recalibrer à son geste.
+- La latence « geste → son » reste une estimation (écart au clavier + 5 ms), sensible à la façon de poser son geste : elle est « à interpréter » quand la détection précède le clavier, comme à 70 BPM ou dans la séance B.
+
+**À reprendre en phase 05 ou 06**
+
+- Refaire trois séances par tempo, en notant la lumière, et regarder si la caisse claire de la main gauche continue de manquer ; sinon calibrer la course sur le geste du motif.
+- Essayer 60 images/s sur la webcam intégrée (`[camera]`) avant tout achat (ADR 0004).
+- La nuance règle le volume par vitesse de geste ; la compensation de latence pour jouer une partition à la caméra est la phase 06.
