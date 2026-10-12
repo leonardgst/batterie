@@ -26,6 +26,15 @@ from itertools import pairwise
 
 from batterie.core.elements import ELEMENTS_BY_ID
 from batterie.core.events import Source
+from batterie.input.vision.diagnosis import (
+    MissCause,
+    MissDiagnosis,
+    TrajectoryPoint,
+    diagnose_misses,
+    summarize_causes,
+)
+from batterie.input.vision.strike_detector import DEFAULT_MIN_SPEED_PX_PER_S
+from batterie.input.vision.zones import ZoneMap
 
 # Critère de fin de la phase 03 : au moins 90 % des coups détectés.
 DETECTION_TARGET = 0.90
@@ -38,6 +47,9 @@ US7_LATENCY_MAX_MS = 60.0  # geste -> son
 # Retard du moteur audio entre l'ordre de jouer et le son (ADR 0001), ajouté à la
 # détection pour estimer la latence geste -> son : ce programme ne peut pas le mesurer.
 AUDIO_ENGINE_DELAY_MS = 5.0
+# En dessous de cet écart (négatif) par rapport au clavier, la détection est vraiment en
+# avance ; au-dessus, c'est du bruit de mesure (écart-type d'une séance : 20 à 60 ms).
+EARLY_DETECTION_MARGIN_MS = 10.0
 
 
 @dataclass(frozen=True)
@@ -222,6 +234,8 @@ class SessionResult:
     tracked_ratio: float | None = None
     attributed: int | None = None  # coups sur le bon élément ; ``None`` sans motif ni caméra
     confusions: tuple[tuple[str, str, int], ...] = ()
+    detected_clicks: tuple[int, ...] = ()  # numéros (depuis 0) des clics touchés
+    misses: tuple[MissDiagnosis, ...] = ()  # cause de chaque clic manqué (séance à motif)
 
     @property
     def missed(self) -> int:
@@ -276,7 +290,11 @@ class SessionRecorder:
     plan: SessionPlan
     source: Source
     first_beat_s: float
+    zones: ZoneMap | None = None  # pour diagnostiquer les coups manqués (séance à motif)
 
+    _trajectory: dict[str, list[TrajectoryPoint]] = field(
+        default_factory=dict, init=False, repr=False
+    )
     _hits_s: list[tuple[float, str | None]] = field(default_factory=list, init=False, repr=False)
     _frames: list[tuple[float, float, bool]] = field(default_factory=list, init=False, repr=False)
 
@@ -301,6 +319,29 @@ class SessionRecorder:
         if self._in_session(t_s):
             self._frames.append((t_s, processing_ms, tracked))
 
+    def add_point(self, t_s: float, hand: str, x: float | None, y: float | None) -> None:
+        """Enregistre la position d'un embout (``None`` s'il n'est pas vu) : coordonnées seulement.
+
+        Sert au diagnostic des coups manqués. On garde un peu de recul avant le premier clic,
+        le geste précédant l'impact."""
+        elapsed_s = t_s - self.first_beat_s
+        if -1.0 <= elapsed_s < self.plan.measured_duration_s:
+            self._trajectory.setdefault(hand, []).append((elapsed_s, x, y))
+
+    def _diagnose(self, detected: set[int]) -> tuple[MissDiagnosis, ...]:
+        plan = self.plan
+        if not (plan.pattern and self.source is Source.VISION and self.zones and self._trajectory):
+            return ()
+        return diagnose_misses(
+            [index for index in range(plan.hit_count) if index not in detected],
+            zones=self.zones,
+            trajectories=self._trajectory,
+            expected_element=plan.expected_element,
+            hand_for_click=hand_for_click,
+            click_time_s=plan.beat_time_s,
+            tolerance_s=plan.tolerance_s,
+        )
+
     def result(self) -> SessionResult:
         closest, extra = _match(self.plan, self._hits_s)
         offsets_ms = [closest[index][0] * 1000 for index in sorted(closest)]
@@ -323,6 +364,8 @@ class SessionRecorder:
             tracked_ratio=tracked_ratio,
             attributed=attributed,
             confusions=confusions,
+            detected_clicks=tuple(sorted(closest)),
+            misses=self._diagnose(set(closest)),
         )
 
 
@@ -355,6 +398,7 @@ class Check:
     value: str
     criterion: str
     met: bool | None  # ``None`` : pas évaluable (il manque la séance clavier de référence)
+    undetermined: str = "à mesurer"  # ce que le rapport écrit quand ``met`` est ``None``
 
 
 def us7_checks(result: SessionResult, reference: SessionResult | None = None) -> list[Check]:
@@ -387,15 +431,110 @@ def us7_checks(result: SessionResult, reference: SessionResult | None = None) ->
         )
     )
     latency = latency_to_sound_ms(result, reference) if reference is not None else None
+    early = (
+        reference is not None
+        and (offset := offset_vs_reference_ms(result, reference)) is not None
+        and offset < -EARLY_DETECTION_MARGIN_MS
+    )
+    if latency is None:
+        value, met, undetermined = "— (fais la séance clavier de référence)", None, "à mesurer"
+    elif early:
+        value = (
+            f"{latency:+.0f} ms — la caméra détecte AVANT la référence clavier "
+            "(plan de frappe franchi tôt dans le geste) : ce n'est pas un succès"
+        )
+        met, undetermined = None, "à interpréter"
+    else:
+        value, met, undetermined = f"{latency:+.0f} ms", latency <= US7_LATENCY_MAX_MS, ""
     checks.append(
         Check(
             "Latence geste → son",
-            "— (fais la séance clavier de référence)" if latency is None else f"{latency:+.0f} ms",
+            value,
             f"≤ {US7_LATENCY_MAX_MS:.0f} ms",
-            None if latency is None else latency <= US7_LATENCY_MAX_MS,
+            met,
+            undetermined,
         )
     )
     return checks
+
+
+@dataclass(frozen=True)
+class PositionStat:
+    """Coups détectés sur une position du motif (par exemple la 3ᵉ croche) : où ça casse."""
+
+    position: int  # à partir de 1
+    hand: str
+    element_id: str
+    detected: int
+    total: int
+
+
+def position_stats(result: SessionResult) -> list[PositionStat]:
+    """Détection position par position du motif ; vide sans motif."""
+    plan = result.plan
+    if not plan.pattern:
+        return []
+    detected = set(result.detected_clicks)
+    stats = []
+    for position, element_id in enumerate(plan.pattern):
+        clicks = range(position, plan.hit_count, len(plan.pattern))
+        stats.append(
+            PositionStat(
+                position=position + 1,
+                hand=hand_for_click(position),
+                element_id=element_id,
+                detected=sum(click in detected for click in clicks),
+                total=len(clicks),
+            )
+        )
+    return stats
+
+
+def hand_stats(result: SessionResult) -> dict[str, tuple[int, int]]:
+    """Coups détectés et clics par main : ``{"left": (détectés, total), ...}``."""
+    plan = result.plan
+    detected = set(result.detected_clicks)
+    totals: dict[str, list[int]] = {"left": [0, 0], "right": [0, 0]}
+    for click in range(plan.hit_count):
+        hand = totals[hand_for_click(click)]
+        hand[1] += 1
+        hand[0] += click in detected
+    return {hand: (counts[0], counts[1]) for hand, counts in totals.items()}
+
+
+_HAND_LETTER = {"left": "G", "right": "D"}
+_CAUSE_VALUE = {
+    MissCause.PLANE_NOT_REACHED: lambda v: f"il manque {v:.0f} px (médiane) pour atteindre le plan",
+    MissCause.OUT_OF_ZONE: lambda v: f"à {v:.0f} px de la zone (médiane)",
+    MissCause.TOO_SLOW: lambda v: (
+        f"vitesse {v:.0f} px/s (médiane), minimum {DEFAULT_MIN_SPEED_PX_PER_S:.0f}"
+    ),
+    MissCause.NOT_REARMED: lambda v: f"remontée de {v:.0f} px seulement (médiane)",
+}
+
+
+def _detail_lines(result: SessionResult) -> list[str]:
+    """Où et pourquoi les coups sont manqués (séance caméra à motif)."""
+    lines = ["Détail par position du motif (G = main gauche, D = main droite) :"]
+    for stat in position_stats(result):
+        label = ELEMENTS_BY_ID[stat.element_id].label_fr
+        hand = _HAND_LETTER[stat.hand]
+        lines.append(f"  {stat.position}  {hand}  {label:<18} {stat.detected} / {stat.total}")
+    hands = hand_stats(result)
+    lines.append(
+        "Par main : gauche {} / {}, droite {} / {}".format(*hands["left"], *hands["right"])
+    )
+    if result.misses:
+        lines.append(f"Coups manqués : {len(result.misses)}")
+        for cause, clicks, value in summarize_causes(result.misses):
+            shown = ", ".join(str(click + 1) for click in clicks[:8])
+            more = f"… (+{len(clicks) - 8})" if len(clicks) > 8 else ""
+            line = f"  {cause.value} : {len(clicks)} (clics {shown}{more})"
+            describe = _CAUSE_VALUE.get(cause)
+            if describe is not None and value is not None:
+                line += f" — {describe(value)}"
+            lines.append(line)
+    return lines
 
 
 def _percent(ratio: float) -> str:
@@ -451,7 +590,12 @@ def format_report(result: SessionResult, reference: SessionResult | None = None)
     if reference is not None:
         offset_ms = offset_vs_reference_ms(result, reference)
         if offset_ms is not None:
-            lines.append(f"Retard par rapport au clavier : {offset_ms:+.0f} ms")
+            early_note = (
+                " (la caméra détecte avant le clavier)"
+                if offset_ms < -EARLY_DETECTION_MARGIN_MS
+                else ""
+            )
+            lines.append(f"Retard par rapport au clavier : {offset_ms:+.0f} ms{early_note}")
     checks = us7_checks(result, reference)
     if checks:
         if plan.bpm != US7_PLAN.bpm:
@@ -461,6 +605,7 @@ def format_report(result: SessionResult, reference: SessionResult | None = None)
             )
         lines.append("Critères US7 :")
         for check in checks:
-            mark = {True: "atteint", False: "NON ATTEINT", None: "à mesurer"}[check.met]
+            mark = {True: "atteint", False: "NON ATTEINT", None: check.undetermined}[check.met]
             lines.append(f"  {check.label} : {check.value} — critère {check.criterion} : {mark}")
+        lines.extend(_detail_lines(result))
     return lines

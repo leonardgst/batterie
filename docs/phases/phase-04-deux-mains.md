@@ -71,6 +71,12 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [x] Livrée (les PR 1 à 5 tenaient le budget de temps ; elle ne bloque pas la clôture)
 - [ ] Nécessite ta webcam : jouer doucement puis fort, régler `soft_speed` / `hard_speed` d'après l'écran, dire si la nuance se sent et si elle te plaît (sinon `enabled = false`)
 
+**PR 7 — Diagnostic des coups manqués** (`feat/vision-diagnosis`) — ajoutée le 2026-10-12, après tes premières séances US7 (voir « Écarts »)
+- [x] `input/vision/diagnosis.py` (logique pure) : pour chaque clic manqué, rejoue la trajectoire de l'embout autour du clic et donne la cause probable : embout non vu, plan jamais atteint (de combien de pixels), plan franchi hors de la zone, trop lent, main pas assez remontée, rien d'anormal
+- [x] `measure.py` et `tools/vision_measure.py` : détection **position par position** du motif et **main par main**, causes des coups manqués dans le rapport ; une latence négative (détection *avant* la référence clavier) n'est plus rapportée comme « atteint » mais « à interpréter »
+- [x] Tests : trajectoires synthétiques pour chaque cause, séance complète avec une position qui rate, latences en avance / en retard
+- [ ] Nécessite ta webcam : refaire des séances, me donner le rapport avec les causes
+
 **Clôture** (PR de documentation, comme en phases 01 à 03) : ADR 0004 (décision d'achat de la caméra des mains, avec tes chiffres), cases cochées, rétrospective, CHANGELOG `[0.4.0]`, tag `v0.4.0` après fusion.
 
 ## Risques de la phase
@@ -128,6 +134,11 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 | Attribués au bon élément | ≥ 95 % | parmi les coups détectés, ceux dont l'élément est celui du motif ; les confusions sont listées (« attendu Caisse claire, obtenu Tom médium : 3 ») |
 | Latence geste → son | ≤ 60 ms | (écart médian coup − clic de la séance caméra) − (celui de la référence clavier) + 5 ms de moteur audio (ADR 0001) |
 
+**Lire le diagnostic** (séance caméra, sous les critères) :
+- *Détail par position du motif* : détectés / total pour chacune des 8 positions (main et élément) et pour chaque main. Une position qui rate seule désigne un élément ou une main (zone mal placée, embout masqué) ; des ratés partout désignent plutôt le geste ou les réglages.
+- *Coups manqués* : cause probable de chaque clic manqué, avec les numéros de clics et une valeur médiane : « plan de frappe jamais atteint » (il manque N px : geste plus court que ta calibration, recalibre avec le geste du motif, ou monte le plan), « trop lentement » (vitesse < 200 px/s : geste trop mou), « hors de la zone » (zone mal placée ou main qui dérive), « main pas assez remontée » (remonte plus haut entre deux coups), « embout non vu ». C'est approché : le diagnostic refait le calcul du détecteur sur les positions reçues, il oriente le réglage sans le prouver.
+- *Latence en avance* : si l'écart par rapport au clavier est inférieur à −10 ms, la caméra détecte **avant** ton appui de référence (le plan de frappe est franchi tôt dans la descente, avant l'impact en bas du geste). Ce n'est pas un succès : le rapport écrit « à interpréter ». Le critère ≤ 60 ms mesure un retard ; une avance importante signale un plan placé trop haut.
+
 **Ce que la mesure ne dit pas** (à garder en tête en lisant les chiffres)
 - Un coup parasite tombé dans la fenêtre d'un clic **raté** compte comme la détection de ce clic : il peut masquer un raté (visible alors dans les confusions s'il tombe sur un autre élément). Les coups pendant le décompte ou après la fin sont ignorés.
 - La latence suppose que ton geste de baguette et ton appui sur la barre d'espace anticipent le clic de la même façon ; ce n'est pas exact (la baguette est plus lente à arrêter), d'où un chiffre indicatif, à lire avec les trois séances (écart-type et variation d'une séance à l'autre).
@@ -144,6 +155,7 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 
 ## Écarts par rapport au plan
 
+- **PR 7 — ajoutée après les premières mesures.** Séances à 70 BPM, premier essai : 51 et 58 % de coups détectés, 0 faux coup, 100 % des coups détectés sur le bon élément, écart au clic de −93 et −99 ms (la détection précède le clic d'environ 100 ms). Après recalibration avec un geste plus franc : 89 % détectés, 2 faux coups, 100 % attribués, écart −23 ms. Le seul compte-rendu ne dit pas *pourquoi* les coups sont manqués ; plutôt que de régler des seuils à l'aveugle, on mesure les causes (PR 7). Rapport corrigé au passage : une latence négative était écrite « atteint ».
 - **PR 6 — la vitesse du coup est le pic de descente sur les 0,12 s qui précèdent, pas la vitesse entre deux images.** À 30 images/s, la vitesse entre deux images bouge de façon visible d'un coup à l'autre pour le même geste (une image de plus ou de moins dans la descente) ; le pic sur 3 à 4 images est plus stable et ne sous-estime pas un coup qui ralentit en touchant le plan. Testé sur des trajectoires synthétiques (dont un coup rapide qui ralentit au franchissement).
 - **PR 6 — les vitesses par défaut sont des points de départ, estimés, pas mesurés.** `soft_speed` 200 px/s (le coup le plus doux détectable, le seuil de détection), `hard_speed` 900 px/s, volume minimal 0,1 (−20 dB) : une vitesse en pixels dépend de ta distance à la caméra et de ton geste. D'où l'affichage de la vitesse et du volume du dernier coup dans le jeu caméra, pour régler d'après tes vrais coups. La nuance est **activée par défaut** (`enabled = false` pour revenir à tous les coups à fond).
 - **PR 6 — le volume monte en décibels, pas en amplitude (corrigé le 2026-10-12 après ton essai).** La première version montait linéairement de 0,3 à 1,0 d'amplitude : le moteur audio appliquait bien le volume (mesuré à la sortie du mixeur : 0,3 donne −10,5 dB), mais 10 dB s'entendent à peine sur un coup de batterie, et l'écran affichait pourtant une grande plage de volume. La courbe est maintenant géométrique (`floor ** (1 − x)`) avec un volume minimal de 0,1 (−20 dB) : le même écart de vitesse donne le même écart de décibels. `gamma` compense si les coups moyens paraissent trop doux ou trop forts. L'illumination du kit ne dépend pas de la vitesse.
