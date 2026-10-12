@@ -2,7 +2,8 @@
 
 À crête égale, un son très court s'entend nettement plus faible qu'un son long : la
 charleston fermée (50 ms au départ) ne sonnait jamais fort, même à pleine vélocité. Ce test
-compare l'énergie pondérée A (proxy de l'oreille, pas une mesure de sonie) des sons du kit.
+compare l'énergie pondérée A (proxy de l'oreille, pas une mesure de sonie) des sons du kit,
+le tom médium servant de référence (jugé « parfait » à l'oreille par l'utilisateur).
 """
 
 import tomllib
@@ -46,8 +47,14 @@ def _loudness_db(element_id: str) -> float:
     return 10 * np.log10(energy)
 
 
-def test_the_closed_hihat_is_not_much_quieter_than_the_snare():
-    assert _loudness_db("hihat_closed") >= _loudness_db("snare") - 1.0
+def test_the_closed_hihat_is_not_much_quieter_than_the_mid_tom():
+    assert _loudness_db("hihat_closed") >= _loudness_db("tom_mid") - 1.0
+
+
+def test_the_snare_is_not_much_quieter_than_the_toms_or_the_closed_hihat():
+    snare = _loudness_db("snare")
+    assert snare >= _loudness_db("tom_mid") - 1.0
+    assert snare >= _loudness_db("hihat_closed") - 1.0
 
 
 def test_the_closed_hihat_lasts_long_enough_to_be_heard():

@@ -82,9 +82,12 @@ def _kick(seed: int) -> Samples:
 
 
 def _snare(seed: int) -> Samples:
-    noise = _apply_envelope(_brighten(_white_noise(0.18, seed=seed)), tau_s=0.05)
-    body = _apply_envelope(_sine(200.0, 0.1), tau_s=0.035)
-    return _normalize(_mix(noise, body))
+    # Comme la charleston fermée, un son trop court et trop mince s'entend faible à crête
+    # égale : bruit net plus bruit non filtré (le corps des timbres), et un peu plus long.
+    noise = _apply_envelope(_brighten(_white_noise(0.25, seed=seed)), tau_s=0.07)
+    mid_noise = _apply_envelope(_white_noise(0.25, seed=seed + 100), tau_s=0.07)
+    body = _apply_envelope(_sine(200.0, 0.12), tau_s=0.05)
+    return _normalize(_mix(noise, [s * 1.6 for s in mid_noise], body))
 
 
 def _hihat_closed(seed: int) -> Samples:
