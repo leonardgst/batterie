@@ -17,6 +17,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ### Changed
 
+- Nuance : le volume monte maintenant en décibels et non en amplitude linéaire (`floor ** (1 − x)`), avec un volume minimal par défaut de 0,1 (−20 dB) au lieu de 0,3 : l'ancienne courbe ne donnait que 10 dB entre un coup doux et un coup fort, à peine audibles. `floor` doit être strictement supérieur à 0 dans `[velocity]` (une valeur invalide retombe sur les défauts). Rien d'autre ne change : vitesses de départ et réglages identiques.
 - `tools/vision_measure.py` : `parse_arguments` renvoie un objet `Options` (cible, simulation, séance US7) ; le rapport d'une séance de la phase 03 est inchangé. `SessionPlan` gagne `clicks_per_beat`, `pattern` et `detection_target` (valeurs par défaut de la phase 03).
 - `VisionSample` porte maintenant un échantillon par embout (`markers`) ; `point`, `velocity_px_per_s` et `hit_event` restent disponibles pour le premier embout, donc la baguette et le pied marchent comme avant. Dans les outils, un préréglage de cible (`TargetPreset`) regroupe maintenant un ou plusieurs embouts (`MarkerPreset`).
 

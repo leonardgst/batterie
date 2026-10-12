@@ -44,8 +44,18 @@ def test_the_softest_hit_gets_the_floor_and_the_hardest_gets_full_volume():
     assert CURVE.velocity(1000.0) == pytest.approx(1.0)
 
 
-def test_the_curve_is_linear_between_the_two_speeds_by_default():
-    assert CURVE.velocity(600.0) == pytest.approx(0.6)  # milieu : 0,2 + 0,8 × 0,5
+def test_the_curve_rises_by_equal_decibel_steps_between_the_two_speeds():
+    # milieu des vitesses : à mi-chemin des décibels, donc 0,2 ** 0,5 en amplitude
+    assert CURVE.velocity(600.0) == pytest.approx(0.2**0.5)
+    quarter, three_quarters = CURVE.velocity(400.0), CURVE.velocity(800.0)
+    assert quarter / CURVE.velocity(200.0) == pytest.approx(three_quarters / CURVE.velocity(600.0))
+
+
+def test_a_soft_hit_is_far_enough_below_a_hard_one_to_be_heard():
+    # Linéaire de 0,3 à 1 donnait 10 dB : à peine audible. Le défaut va maintenant à 20 dB.
+    default = VelocityCurve()
+    drop_db = 20 * np.log10(default.velocity(default.soft_speed_px_per_s))
+    assert drop_db == pytest.approx(-20.0)
 
 
 def test_the_curve_is_clamped_outside_the_two_speeds():
@@ -83,6 +93,7 @@ def test_a_floor_of_one_gives_every_hit_full_volume():
         {"soft_speed_px_per_s": -1.0},
         {"floor": 1.5},
         {"floor": -0.1},
+        {"floor": 0.0},
         {"gamma": 0.0},
         {"gamma": -1.0},
     ],
@@ -189,6 +200,7 @@ def test_velocity_section_may_set_only_some_values(tmp_path):
         "soft_speed = 900\nhard_speed = 200\n",  # courbe à l'envers
         "floor = 3\n",
         "floor = -1\n",
+        "floor = 0\n",
         "gamma = 0\n",
         'soft_speed = "doux"\n',
         "soft_speed = true\n",
