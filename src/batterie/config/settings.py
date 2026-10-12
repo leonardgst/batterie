@@ -57,7 +57,7 @@ class VelocitySettings:
     enabled: bool = True
     soft_speed: float = 200.0
     hard_speed: float = 900.0
-    floor: float = 0.3
+    floor: float = 0.1
     gamma: float = 1.0
 
 
@@ -96,7 +96,7 @@ def _camera_from_data(data: dict) -> CameraSettings:
 
 def _velocity_from_data(data: dict) -> VelocitySettings:
     """Lit la section ``[velocity]`` ; une valeur invalide, ou une courbe incohérente
-    (``soft_speed`` pas inférieur à ``hard_speed``, ``floor`` hors de 0 à 1), garde les
+    (``soft_speed`` pas inférieur à ``hard_speed``, ``floor`` pas dans ]0 ; 1]), garde les
     valeurs par défaut."""
     default = VelocitySettings()
 
@@ -116,7 +116,7 @@ def _velocity_from_data(data: dict) -> VelocitySettings:
     )
     coherent = (
         0 <= candidate.soft_speed < candidate.hard_speed
-        and 0.0 <= candidate.floor <= 1.0
+        and 0.0 < candidate.floor <= 1.0
         and candidate.gamma > 0
     )
     return candidate if coherent else replace(default, enabled=candidate.enabled)
@@ -159,7 +159,7 @@ def _render_default_template() -> str:
         "# enabled = true      # false : tous les coups sonnent à fond",
         '# soft_speed = 200    # vitesse (px/s) d\'un coup doux = volume "floor"',
         "# hard_speed = 900    # vitesse (px/s) d'un coup fort = volume maximal",
-        "# floor = 0.3         # volume du coup le plus doux (0 à 1)",
+        "# floor = 0.1         # volume du coup le plus doux : 0.1 = 20 dB sous un coup fort",
         "# gamma = 1.0         # courbe : > 1 garde les coups moyens doux, < 1 les rend forts",
         "",
     ]

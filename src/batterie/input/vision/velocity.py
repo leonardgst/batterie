@@ -6,7 +6,10 @@ Logique pure, sans caméra ni pygame. Deux morceaux :
   sur les ~0,12 s qui précèdent (trois ou quatre images à 30 images/s), plus fiable que la
   vitesse entre deux images seulement, qui bouge d'une image à l'autre ;
 - ``VelocityCurve`` transforme cette vitesse (pixels par seconde, dans l'image réduite du
-  processus vision) en vélocité de 0 à 1, que le moteur audio applique comme volume.
+  processus vision) en vélocité de 0 à 1, que le moteur audio applique comme volume. L'oreille
+  juge le volume en décibels, pas en amplitude : la courbe monte donc de façon **géométrique**
+  (pas d'écart de décibels égaux pour des écarts de vitesse égaux), sinon un coup à 30 %
+  d'amplitude (−10 dB) s'entend à peine plus doux qu'un coup fort.
 
 Les vitesses dépendent de ta distance à la caméra et de ta taille dans l'image : les valeurs
 par défaut sont des points de départ, à régler avec l'écran « Jeu caméra » qui affiche la
@@ -29,13 +32,15 @@ class VelocityCurve:
 
     En dessous de ``soft_speed_px_per_s`` (le coup le plus doux qu'on détecte), la vélocité
     vaut ``floor`` ; au-dessus de ``hard_speed_px_per_s`` (le coup le plus fort), 1.0 ; entre
-    les deux, elle monte de ``floor`` à 1.0 selon ``gamma`` (1 : régulier ; au-dessus de 1 :
-    les coups moyens restent doux ; entre 0 et 1 : les coups moyens sonnent déjà fort).
+    les deux, elle monte de ``floor`` à 1.0 en suivant ``floor ** (1 - x ** gamma)`` où ``x``
+    va de 0 à 1 avec la vitesse : le même écart de vitesse donne le même écart de décibels
+    (``floor`` 0.1 = un coup doux 20 dB sous un coup fort). ``gamma`` : 1 régulier ; au-dessus
+    de 1, les coups moyens restent doux ; entre 0 et 1, ils sonnent déjà fort.
     """
 
     soft_speed_px_per_s: float = 200.0
     hard_speed_px_per_s: float = 900.0
-    floor: float = 0.3
+    floor: float = 0.1
     gamma: float = 1.0
 
     def __post_init__(self) -> None:
@@ -44,8 +49,10 @@ class VelocityCurve:
                 f"Courbe de vélocité : il faut 0 <= soft ({self.soft_speed_px_per_s}) "
                 f"< hard ({self.hard_speed_px_per_s})"
             )
-        if not 0.0 <= self.floor <= 1.0:
-            raise ValueError(f"Courbe de vélocité : floor ({self.floor}) doit être entre 0 et 1")
+        if not 0.0 < self.floor <= 1.0:
+            raise ValueError(
+                f"Courbe de vélocité : floor ({self.floor}) doit être supérieur à 0 et au plus 1"
+            )
         if self.gamma <= 0:
             raise ValueError(f"Courbe de vélocité : gamma ({self.gamma}) doit être positif")
 
@@ -54,7 +61,7 @@ class VelocityCurve:
         span = self.hard_speed_px_per_s - self.soft_speed_px_per_s
         position = (speed_px_per_s - self.soft_speed_px_per_s) / span
         position = min(1.0, max(0.0, position))
-        return self.floor + (1.0 - self.floor) * position**self.gamma
+        return self.floor ** (1.0 - position**self.gamma)
 
 
 def curve_from_settings(settings: VelocitySettings) -> VelocityCurve | None:
