@@ -6,7 +6,7 @@ import pytest
 
 import vision_debug
 import vision_measure
-from batterie.input.vision.color_tracker import GREEN, ORANGE, TrackedPoint
+from batterie.input.vision.color_tracker import GREEN, PINK, TrackedPoint
 from batterie.input.vision.process import MarkerSample, MarkerSpec, VisionSample
 from batterie.input.vision.strike_detector import StrikeDetector
 
@@ -137,9 +137,9 @@ def test_foot_preset_merges_two_crossings_closer_than_its_refractory_period():
 # --- Deux mains (phase 04) ---------------------------------------------------
 
 
-def test_hands_target_tracks_orange_on_the_left_and_green_on_the_right():
+def test_hands_target_tracks_pink_on_the_left_and_green_on_the_right():
     left, right = vision_debug.HANDS.markers
-    assert (left.name, left.color_range) == ("left", ORANGE)
+    assert (left.name, left.color_range) == ("left", PINK)
     assert (right.name, right.color_range) == ("right", GREEN)
 
 
@@ -191,7 +191,7 @@ def test_sidebar_for_two_hands_reports_each_hand_separately():
     lines = vision_debug.sidebar_lines(vision_debug.HANDS, _hands_sample(), {"left": 7, "right": 5})
     text = "\n".join(lines)
     assert "Coups détectés : 12" in text
-    assert "Main gauche (orange) : 7 coups" in text
+    assert "Main gauche (rose) : 7 coups" in text
     assert "Main droite (verte) : 5 coups" in text
     assert "(100, 80)" in text  # la main gauche est vue
     assert "non détecté" in text  # la main droite ne l'est pas

@@ -14,7 +14,7 @@ Référence : [cadrage](../00-cadrage.md) §5 (phase 04), exigences M9 (coup de 
 ## Point de départ (phase 03, ADR 0002)
 
 - Une baguette suivie par la webcam intégrée : 48 à 50 coups sur 50, 0 faux coup, 31,2 images/s, retard par rapport au clavier ≤ 55 ms. Les outils `tools/vision_debug.py` et `tools/vision_measure.py` (préréglages de cible) servent de base.
-- **Couleurs (choisies le 2026-10-10)** : **main gauche orange, main droite verte**. Le bleu est réservé au pied (phase 05).
+- **Couleurs (choisies le 2026-10-10)** : **main gauche orange, main droite verte**. *Changement du 2026-10-12 : la main gauche passe au **rose fluo** (surligneur rose classique, plage `PINK`), l'orange étant gardé en préréglage ; voir le journal.* Le bleu est réservé au pied (phase 05).
 - **Caméra** : la phase démarre avec la webcam intégrée. Une webcam 60 images/s d'occasion (C922 ou StreamCam, ~40 €) est prévue pour les mains, en hauteur face à toi (disposition du cadrage §7, note du 2026-10-10). La décision d'achat se prend sur des chiffres après la PR 4, dans l'ADR 0004.
 - **Réserves de l'ADR 0002 à lever ici** : deux mains (confusion de couleur), plusieurs éléments (attribution), tenue à 90 BPM en croches, retard détection + son au ras de 60 ms.
 - **Pieds** : test anticipé en phase 03, suivi correct mais retard de +109 ms sur une séance ; décision pour les pieds repoussée au début de la phase 05. La phase 04 n'en dépend pas.
@@ -26,7 +26,7 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 ## Prérequis
 
 - [x] Couleurs : main gauche orange, main droite verte (embout vert : ta brosse à dents de la phase 03)
-- [ ] Un embout **orange vif** (ruban ou embout fluo, pas un orange pâle), pour la main gauche
+- [ ] Un embout **rose fluo** (surligneur rose classique, pas un rose pâle), pour la main gauche (c'était un orange vif avant le 2026-10-12)
 - [ ] Phase découpée en PR (fait par ce document)
 
 ## Livrables

@@ -16,7 +16,7 @@ from batterie.input.vision.process import VisionSample
 from batterie.input.vision.zones import Zone, ZoneMap
 
 HAND_COLORS: dict[str, tuple[int, int, int]] = {
-    "left": (255, 150, 40),  # orange
+    "left": (255, 80, 200),  # rose fluo
     "right": (90, 220, 120),  # vert
 }
 DEFAULT_MARKER_COLOR = (255, 205, 90)
