@@ -121,7 +121,7 @@ Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --s
 la charleston fermée, la caisse claire, le tom médium et le ride, les deux mains en alternance.
 Elle utilise tes zones calibrées et chiffre les quatre critères US7 (coups détectés, faux
 coups, coups sur le bon élément, latence geste → son, avec une séance clavier de référence).
-Protocole complet dans la [page de la phase 04](docs/phases/phase-04-deux-mains.md#protocole-de-mesure-us7).
+`--bpm 70` joue la même séance plus lentement (le critère US7 reste défini à 90 BPM). Protocole complet dans la [page de la phase 04](docs/phases/phase-04-deux-mains.md#protocole-de-mesure-us7).
 Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
 [pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 

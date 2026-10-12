@@ -186,6 +186,7 @@ from batterie.input.vision.measure import (  # noqa: E402
     hand_for_click,
     latency_to_sound_ms,
     us7_checks,
+    us7_plan_at,
 )
 
 INTERVAL = US7_PLAN.beat_interval_s
@@ -396,3 +397,28 @@ def test_report_of_a_phase_03_session_is_unchanged():
     assert "critère ≥ 90 % : atteint" in text
     assert "US7" not in text
     assert "bon élément" not in text
+
+
+def test_us7_plan_at_another_tempo_keeps_the_pattern_and_the_hit_count():
+    slow = us7_plan_at(70.0)
+    assert slow.bpm == 70.0
+    assert slow.beat_interval_s == pytest.approx(60 / 70 / 2)
+    assert slow.pattern == US7_PLAN.pattern and slow.hit_count == 100
+    assert US7_PLAN.bpm == 90.0  # le plan du critère n'est pas modifié
+
+
+def test_report_warns_when_the_us7_session_is_not_at_the_criterion_tempo():
+    slow = us7_plan_at(70.0)
+    recorder = SessionRecorder(plan=slow, source=Source.VISION, first_beat_s=0.0)
+    for index in range(slow.hit_count):
+        recorder.add_hit(slow.beat_time_s(index) + 0.04, slow.expected_element(index))
+
+    text = "\n".join(format_report(recorder.result()))
+
+    assert "100 coups à 70 BPM (croches)" in text
+    assert "Attention : tempo de 70 BPM ; le critère US7 est défini à 90 BPM" in text
+
+
+def test_report_does_not_warn_at_the_criterion_tempo():
+    text = "\n".join(format_report(_vision_result(_pattern_hits())))
+    assert "Attention" not in text

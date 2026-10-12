@@ -21,7 +21,7 @@ import math
 import statistics
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from itertools import pairwise
 
 from batterie.core.elements import ELEMENTS_BY_ID
@@ -102,6 +102,15 @@ US7_PLAN = SessionPlan(
     pattern=US7_PATTERN,
     detection_target=US7_DETECTION_TARGET,
 )
+
+
+def us7_plan_at(bpm: float) -> SessionPlan:
+    """La séance US7 à un autre tempo (même motif, même nombre de coups).
+
+    Le critère US7 est défini à 90 BPM : un tempo plus lent facilite la mesure mais ne prouve
+    rien à 90 (le rapport le rappelle).
+    """
+    return replace(US7_PLAN, bpm=bpm)
 
 
 def hand_for_click(index: int) -> str:
@@ -445,6 +454,11 @@ def format_report(result: SessionResult, reference: SessionResult | None = None)
             lines.append(f"Retard par rapport au clavier : {offset_ms:+.0f} ms")
     checks = us7_checks(result, reference)
     if checks:
+        if plan.bpm != US7_PLAN.bpm:
+            lines.append(
+                f"Attention : tempo de {plan.bpm:.0f} BPM ; le critère US7 est défini à "
+                f"{US7_PLAN.bpm:.0f} BPM, à confirmer à ce tempo."
+            )
         lines.append("Critères US7 :")
         for check in checks:
             mark = {True: "atteint", False: "NON ATTEINT", None: "à mesurer"}[check.met]

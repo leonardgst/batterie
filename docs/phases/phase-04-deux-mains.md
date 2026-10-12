@@ -106,6 +106,7 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 - Aucun son n'est joué sur tes coups, exprès (comme en phase 03) : tu te calerais dessus et le retard disparaîtrait de la mesure.
 
 **Déroulé** : `uv run python tools/vision_measure.py --pattern`
+(`--bpm 70` pour une séance plus lente : utile pour s'entraîner ou si 90 est trop rapide. Le critère US7 est défini à **90 BPM** : un résultat à 70 ne le valide pas, l'outil l'écrit dans le rapport. Fais la référence clavier **au même tempo** que les séances caméra, dans le même lancement.)
 1. **Référence clavier** (touche K) : 8 clics aigus de décompte (une mesure de croches), puis un appui sur la **barre d'espace** à chacun des 100 clics graves. Elle donne ton écart naturel par rapport au clic.
 2. **Trois séances caméra** (touche V, une par essai, entrée pour démarrer) : même décompte, puis un coup de baguette sur chaque clic grave, **sur l'élément et avec la main indiqués** par la case en surbrillance. Le premier clic de chaque motif est plus aigu pour te repérer.
 3. À la fin de chaque séance, le résultat s'affiche à l'écran et dans le terminal ; **copie le texte du terminal** (les trois séances et la référence) et envoie-le-moi. Si une séance est ratée (tu t'es perdu, le marqueur a quitté l'image), refais-la plutôt que de la garder.

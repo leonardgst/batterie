@@ -52,6 +52,34 @@ def test_without_pattern_the_phase_03_session_is_unchanged():
     assert vision_measure.PLAN.hit_count == 50 and vision_measure.PLAN.bpm == 80.0
 
 
+def test_bpm_defaults_to_the_us7_criterion_tempo():
+    assert vision_measure.parse_arguments(["--pattern"]).bpm == 90.0
+
+
+def test_bpm_sets_the_tempo_of_the_us7_session():
+    options = vision_measure.parse_arguments(["--pattern", "--bpm", "70"])
+    assert options.bpm == 70.0
+
+
+@pytest.mark.parametrize("bpm", ["20", "300", "0", "-70"])
+def test_bpm_out_of_range_is_rejected(bpm):
+    with pytest.raises(SystemExit):
+        vision_measure.parse_arguments(["--pattern", "--bpm", bpm])
+
+
+def test_bpm_is_refused_without_pattern():
+    with pytest.raises(SystemExit):
+        vision_measure.parse_arguments(["--bpm", "70"])
+
+
+def test_main_passes_the_tempo_to_the_session(monkeypatch):
+    calls = []
+    monkeypatch.setattr(vision_measure, "run", lambda target, **kw: calls.append(kw))
+
+    assert vision_measure.main(["--pattern", "--simulate", "--bpm", "70"]) == 0
+    assert calls[0]["bpm"] == 70.0
+
+
 # --- Zones de la séance ------------------------------------------------------------
 
 
@@ -212,7 +240,7 @@ def app(pygame_ready):
 
 
 def test_the_pattern_app_uses_the_us7_plan_and_the_simulated_zones(app):
-    assert app.plan is US7_PLAN
+    assert app.plan == US7_PLAN
     assert app.zones is vision_measure.SIMULATED_ZONES
 
 
@@ -338,3 +366,30 @@ def test_a_summary_names_the_camera_that_was_really_obtained(pygame_ready):
 
     assert "Caméra obtenue : 1280×720, 60 i/s annoncées, MJPEG" in text
     assert "Critères US7 :" in text
+
+
+def test_the_app_plays_the_session_at_the_requested_tempo(pygame_ready):
+    slow = vision_measure.MeasureApp(vision_debug.HANDS, simulate=True, pattern=True, bpm=70.0)
+    assert slow.plan.bpm == 70.0
+    assert slow.plan.pattern == US7_PATTERN
+
+
+def test_a_simulated_session_at_70_bpm_is_still_detected_and_attributed():
+    zones = vision_measure.SIMULATED_ZONES
+    specs = hand_specs(zones)
+    plan = vision_measure.us7_plan_at(70.0)
+    fake = FakeTime()
+    frames = vision_measure._simulated_pattern_frames(
+        specs, plan, zones, mirror=True, clock=fake.clock, sleep=fake.sleep
+    )
+    recorder = SessionRecorder(
+        plan=plan, source=Source.VISION, first_beat_s=16 * plan.beat_interval_s
+    )
+    for sample in track_markers(frames, specs, mirror=True, now_ns=fake.now_ns):
+        for hit in sample.hit_events:
+            recorder.add_hit(hit.t_ns / 1e9, hit.element_id)
+        if sample.t_ns / 1e9 > 16 * plan.beat_interval_s + 100 * plan.beat_interval_s + 2:
+            break
+    result = recorder.result()
+
+    assert (result.detected, result.extra, result.attributed) == (100, 0, 100)

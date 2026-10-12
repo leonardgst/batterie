@@ -29,6 +29,7 @@ Protocole dans ``docs/phases/phase-04-deux-mains.md``.
 Usage : ``uv run python tools/vision_measure.py`` (baguette, par défaut)
         ``uv run python tools/vision_measure.py --target foot`` (pied)
         ``uv run python tools/vision_measure.py --pattern`` (séance US7, deux mains)
+        ``uv run python tools/vision_measure.py --pattern --bpm 70`` (même séance, plus lente)
 Sans caméra, pour voir le déroulé avec un marqueur fictif :
 ``uv run python tools/vision_measure.py --simulate`` (ou ``--pattern --simulate``)
 """
@@ -63,6 +64,7 @@ from batterie.input.vision.measure import (
     SessionResult,
     format_report,
     hand_for_click,
+    us7_plan_at,
 )
 from batterie.input.vision.process import (
     WORKING_WIDTH,
@@ -112,6 +114,8 @@ SIMULATED_ZONES = ZoneMap(
     )
 )
 SIMULATED_STROKE_AMPLITUDE = 50.0
+
+MIN_BPM, MAX_BPM = 40.0, 200.0  # bornes de --bpm
 SIMULATED_FPS = 30
 SIMULATED_MARKER_HALF_SIZE = 20
 
@@ -278,13 +282,14 @@ class MeasureApp:
         *,
         simulate: bool = False,
         pattern: bool = False,
+        bpm: float = US7_PLAN.bpm,
         zones: ZoneMap | None = None,
         camera: CameraSettings | None = None,
     ) -> None:
         self.target = target
         self.simulate = simulate
         self.pattern = pattern
-        self.plan = US7_PLAN if pattern else PLAN
+        self.plan = us7_plan_at(bpm) if pattern else PLAN
         # Séance US7 : les coups sont attribués d'après les zones (fictives en simulation).
         self.zones = (SIMULATED_ZONES if simulate else zones) if pattern else None
         self.camera = camera
@@ -707,6 +712,7 @@ def run(
     *,
     simulate: bool = False,
     pattern: bool = False,
+    bpm: float = US7_PLAN.bpm,
     zones: ZoneMap | None = None,
     camera: CameraSettings | None = None,
 ) -> None:
@@ -715,7 +721,9 @@ def run(
     screen = pygame.display.set_mode(WINDOW_SIZE)
     pygame.display.set_caption(f"Batterie — mesure vision ({target.label})")
 
-    app = MeasureApp(target, simulate=simulate, pattern=pattern, zones=zones, camera=camera)
+    app = MeasureApp(
+        target, simulate=simulate, pattern=pattern, bpm=bpm, zones=zones, camera=camera
+    )
     poll_clock = pygame.time.Clock()
     render_interval_s = 1.0 / TARGET_FPS
     next_render = time.perf_counter()
@@ -747,6 +755,7 @@ class Options:
     target: TargetPreset
     simulate: bool = False
     pattern: bool = False  # séance US7 : motif de croches sur 4 éléments, deux mains
+    bpm: float = US7_PLAN.bpm  # tempo de la séance US7
 
 
 def parse_arguments(argv: list[str] | None = None) -> Options:
@@ -766,14 +775,27 @@ def parse_arguments(argv: list[str] | None = None) -> Options:
             "(zones calibrées nécessaires, sauf avec --simulate)"
         ),
     )
+    parser.add_argument(
+        "--bpm",
+        type=float,
+        default=US7_PLAN.bpm,
+        help=(
+            f"tempo de la séance US7, en BPM ({MIN_BPM:.0f} à {MAX_BPM:.0f}, défaut "
+            f"{US7_PLAN.bpm:.0f}, le tempo du critère) ; avec --pattern seulement"
+        ),
+    )
     arguments = parser.parse_args(argv)
+    if not MIN_BPM <= arguments.bpm <= MAX_BPM:
+        parser.error(f"--bpm doit être entre {MIN_BPM:.0f} et {MAX_BPM:.0f}")
+    if arguments.bpm != US7_PLAN.bpm and not arguments.pattern:
+        parser.error("--bpm ne sert qu'avec --pattern (la séance de la phase 03 reste à 80 BPM)")
     if arguments.pattern:
         explicit_target = any(arg.startswith("--target") for arg in (argv or sys.argv[1:]))
         if explicit_target and arguments.target != "hands":
             parser.error(
                 "--pattern se joue à deux mains : enlève --target ou utilise --target hands"
             )
-        return Options(HANDS, simulate=arguments.simulate, pattern=True)
+        return Options(HANDS, simulate=arguments.simulate, pattern=True, bpm=arguments.bpm)
     return Options(TARGETS[arguments.target], simulate=arguments.simulate)
 
 
@@ -809,6 +831,7 @@ def main(argv: list[str] | None = None) -> int:
         options.target,
         simulate=options.simulate,
         pattern=options.pattern,
+        bpm=options.bpm,
         zones=zones,
         camera=camera,
     )
