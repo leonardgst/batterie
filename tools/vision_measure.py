@@ -80,7 +80,7 @@ from vision_debug import HANDS, STICK, TARGETS, TargetPreset, add_target_argumen
 PLAN = SessionPlan(bpm=80.0, hit_count=50, count_in_beats=4)
 LEAD_IN_S = 1.0  # délai entre Entrée et le premier clic de décompte
 
-WINDOW_SIZE = (1000, 620)
+WINDOW_SIZE = (1000, 700)
 PREVIEW_ORIGIN = (20, 20)
 TEXT_X = 370
 TARGET_FPS = 60
@@ -313,6 +313,7 @@ class MeasureApp:
         self._accent_click = _make_click(ACCENT_CLICK_HZ)
         self._font = pygame.font.SysFont("consolas", 18)
         self._small_font = pygame.font.SysFont("consolas", 16)
+        self._tiny_font = pygame.font.SysFont("consolas", 14)  # le rapport complet est long
         self._title_font = pygame.font.SysFont("consolas", 22, bold=True)
         self._big_font = pygame.font.SysFont("consolas", 44, bold=True)
 
@@ -368,6 +369,15 @@ class MeasureApp:
                     self._recorder.add_frame(
                         sample.t_ns / NS_PER_SECOND, sample.processing_ms, tracked
                     )
+                    t_s = sample.t_ns / NS_PER_SECOND
+                    for name, marker in sample.markers.items():
+                        point = marker.point
+                        self._recorder.add_point(
+                            t_s,
+                            name,
+                            None if point is None else point.x,
+                            None if point is None else point.y,
+                        )
                     for hit_event in hit_events:
                         self._recorder.add_hit(hit_event.t_ns / NS_PER_SECOND, hit_event.element_id)
         except queue_module.Empty:
@@ -433,7 +443,9 @@ class MeasureApp:
             # le motif recommence sur les multiples de sa durée) : on cale les clics dessus.
             step_s = plan.beat_interval_s * (len(plan.pattern) or 1)
             first_beat_s = math.ceil(first_beat_s / step_s) * step_s
-        self._recorder = SessionRecorder(plan=plan, source=self.source, first_beat_s=first_beat_s)
+        self._recorder = SessionRecorder(
+            plan=plan, source=self.source, first_beat_s=first_beat_s, zones=self.zones
+        )
         self._next_click = -plan.count_in_beats
         self._last_click_ns = None
         self._last_hit_ns = None
@@ -518,13 +530,14 @@ class MeasureApp:
         *,
         font: pygame.font.Font | None = None,
         color: tuple[int, int, int] = TEXT_COLOR,
+        spacing: int = 4,
     ) -> int:
         """Écrit ``lines`` l'une sous l'autre ; renvoie l'ordonnée sous la dernière."""
         font = font or self._font
         x, y = origin
         for line in lines:
             screen.blit(font.render(line, True, color), (x, y))
-            y += font.get_linesize() + 4
+            y += font.get_linesize() + spacing
         return y
 
     def _draw_preview(self, screen: pygame.Surface, now_ns: int) -> None:
@@ -643,7 +656,9 @@ class MeasureApp:
             )
             if self.message:
                 y = self._draw_lines(screen, [self.message], (text_x, y + 12), color=ERROR_COLOR)
-            self._draw_lines(screen, self.summary_lines(), (text_x, y + 24), font=self._small_font)
+            self._draw_lines(
+                screen, self.summary_lines(), (text_x, y + 12), font=self._tiny_font, spacing=1
+            )
 
         elif self.phase is Phase.CAMERA_WAIT:
             self._draw_lines(
@@ -704,7 +719,9 @@ class MeasureApp:
 
         elif self.phase is Phase.RESULT:
             y = self._draw_lines(screen, ["Séance terminée. Entrée : retour au menu"], top)
-            self._draw_lines(screen, self.summary_lines(), (text_x, y + 24), font=self._small_font)
+            self._draw_lines(
+                screen, self.summary_lines(), (text_x, y + 12), font=self._tiny_font, spacing=1
+            )
 
 
 def run(
