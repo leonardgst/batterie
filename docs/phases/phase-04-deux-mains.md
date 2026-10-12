@@ -67,8 +67,9 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [ ] Nécessite ta webcam : séances de 100 coups, chiffres relevés
 
 **PR 6 — Nuance : la vitesse du geste règle le volume** (`feat/vision-velocity`) — S7, *Should*
-- [ ] `input/vision/velocity.py` : vitesse du geste → vélocité 0 à 1, courbe réglable, testée ; utilisée par le moteur audio (qui accepte déjà une vélocité)
-- [ ] Livrée seulement si les PR 1 à 5 tiennent le budget de temps ; sinon reportée à la phase 06, sans bloquer la clôture
+- [x] `input/vision/velocity.py` : vitesse du geste → vélocité 0 à 1, courbe réglable (`[velocity]` de `settings.toml`), testée ; utilisée par le moteur audio (qui accepte déjà une vélocité). L'écran « Jeu caméra » affiche la vitesse et le volume du dernier coup pour régler la courbe
+- [x] Livrée (les PR 1 à 5 tenaient le budget de temps ; elle ne bloque pas la clôture)
+- [ ] Nécessite ta webcam : jouer doucement puis fort, régler `soft_speed` / `hard_speed` d'après l'écran, dire si la nuance se sent et si elle te plaît (sinon `enabled = false`)
 
 **Clôture** (PR de documentation, comme en phases 01 à 03) : ADR 0004 (décision d'achat de la caméra des mains, avec tes chiffres), cases cochées, rétrospective, CHANGELOG `[0.4.0]`, tag `v0.4.0` après fusion.
 
@@ -143,6 +144,10 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 
 ## Écarts par rapport au plan
 
+- **PR 6 — la vitesse du coup est le pic de descente sur les 0,12 s qui précèdent, pas la vitesse entre deux images.** À 30 images/s, la vitesse entre deux images bouge de façon visible d'un coup à l'autre pour le même geste (une image de plus ou de moins dans la descente) ; le pic sur 3 à 4 images est plus stable et ne sous-estime pas un coup qui ralentit en touchant le plan. Testé sur des trajectoires synthétiques (dont un coup rapide qui ralentit au franchissement).
+- **PR 6 — les vitesses par défaut sont des points de départ, estimés, pas mesurés.** `soft_speed` 200 px/s (le coup le plus doux détectable, le seuil de détection), `hard_speed` 900 px/s, volume minimal 0,3 : une vitesse en pixels dépend de ta distance à la caméra et de ton geste. D'où l'affichage de la vitesse et du volume du dernier coup dans le jeu caméra, pour régler d'après tes vrais coups. La nuance est **activée par défaut** (`enabled = false` pour revenir à tous les coups à fond).
+- **PR 6 — le volume suit directement la vélocité (amplitude linéaire).** Le moteur audio la multiplie telle quelle ; la courbe (`gamma`) sert à compenser si les coups moyens paraissent trop doux ou trop forts. L'illumination du kit ne dépend pas de la vitesse.
+- **PR 6 — nuance seulement dans le jeu caméra.** La séance de mesure US7 ne joue aucun son sur les coups (et la vitesse n'entre pas dans ses critères) : elle n'utilise pas la courbe.
 - **PR 5 — « 90 BPM en croches » : un clic toutes les 1/3 s.** `SessionPlan` gagne `clicks_per_beat` (2 pour des croches) pour que « BPM » garde son sens de temps ; le décompte est d'une mesure de croches (8 clics) au lieu de 4 clics. Non prévu au plan, nécessaire pour que le motif de 8 croches tienne dans une mesure.
 - **PR 5 — le premier clic de chaque motif est plus aigu.** Non prévu au plan : sans repère, il est facile de perdre le début du motif de 8 croches sans regarder l'écran.
 - **PR 5 — l'attribution se compte sur les coups détectés.** Un clic raté fait baisser « coups détectés », pas « attribués au bon élément » : chaque critère mesure un défaut différent, sans compter deux fois le même raté.

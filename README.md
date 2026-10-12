@@ -143,6 +143,8 @@ coup de tes baguettes. L'écran affiche les images par seconde, le temps de trai
 la caméra a réellement accordé (résolution, cadence). Sans zones calibrées, ou si la caméra est
 absente ou occupée, un message te dit quoi faire. **Échap** revient à l'accueil.
 
+**Nuance :** plus tu frappes vite, plus le coup sonne fort. L'écran affiche la vitesse et le volume de ton dernier coup ; les vitesses de départ (coup doux 200 px/s, coup fort 900 px/s, volume minimal 0,3) sont à régler à ta distance et à ton geste dans une section `[velocity]` de `settings.toml` (`enabled = false` pour que tous les coups sonnent à fond).
+
 Pour une autre caméra ou une cadence différente, ajoute une section `[camera]` à ton
 `%APPDATA%\Batterie\settings.toml` (le modèle écrit au premier lancement la décrit en
 commentaire ; sans cette section, rien ne change) :
