@@ -2,7 +2,15 @@
 
 import pygame
 
-from batterie.app import SCORES_DIR, WINDOW_SIZE, _scores_for_style, create_window, handle_events
+from batterie.app import (
+    HOME_CAMERA_PLAY,
+    HOME_ITEMS,
+    SCORES_DIR,
+    WINDOW_SIZE,
+    _scores_for_style,
+    create_window,
+    handle_events,
+)
 
 
 def test_create_window_opens_at_expected_size():
@@ -44,3 +52,7 @@ def test_scores_for_style_sorted_by_difficulty_then_title():
 def test_scores_dir_points_at_the_real_scores_directory():
     assert SCORES_DIR.is_dir()
     assert (SCORES_DIR / "rock").is_dir()
+
+
+def test_home_offers_the_camera_play_entry():
+    assert HOME_CAMERA_PLAY in HOME_ITEMS

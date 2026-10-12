@@ -1,7 +1,6 @@
 """Tests du flux caméra et de l'écran de calibration : caméra et processus factices."""
 
 import math
-import queue as queue_module
 
 import numpy as np
 import pygame
@@ -13,36 +12,10 @@ from batterie.input.vision.color_tracker import TrackedPoint
 from batterie.input.vision.process import WORKING_WIDTH, MarkerSample, VisionSample
 from batterie.input.vision.source import VisionFeed
 from batterie.ui.calibration import CAMERA_LOST_MESSAGE, CalibrationScreen, Phase
+from fakes import FakeProcess, FakeQueue
 
 FPS = 30
 DT = 1 / FPS
-
-
-class FakeQueue:
-    def __init__(self) -> None:
-        self.items: list = []
-
-    def get_nowait(self):
-        if not self.items:
-            raise queue_module.Empty
-        return self.items.pop(0)
-
-
-class FakeProcess:
-    def __init__(self) -> None:
-        self.alive = True
-        self.terminated = False
-        self.joined_with: float | None = None
-
-    def is_alive(self) -> bool:
-        return self.alive
-
-    def terminate(self) -> None:
-        self.terminated = True
-        self.alive = False
-
-    def join(self, timeout: float | None = None) -> None:
-        self.joined_with = timeout
 
 
 def _frame() -> np.ndarray:

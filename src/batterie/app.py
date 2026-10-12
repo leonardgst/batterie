@@ -1,4 +1,4 @@
-"""Boucle principale : accueil, jeu libre, partitions, calibration de la caméra.
+"""Boucle principale : accueil, jeu libre, partitions, calibration et jeu à la caméra.
 
 Le clavier est lu à chaque tour de boucle (≥ 500 Hz) ; le rendu est limité à
 60 images/s. Une touche n'attend jamais l'image suivante pour sonner.
@@ -19,6 +19,7 @@ from batterie.core.score import STYLES, Score, discover_scores, load_score
 from batterie.core.transport import TEMPO_FACTOR_STEP, Transport, clamp_tempo_factor
 from batterie.input.keyboard import Keyboard, scancode_map_from_key_map
 from batterie.ui.calibration import CalibrationScreen
+from batterie.ui.camera_play import CameraPlayScreen
 from batterie.ui.highway import HighwayView
 from batterie.ui.kit_view import BACKGROUND_COLOR, KitView
 from batterie.ui.menu import Menu, draw_menu
@@ -38,8 +39,9 @@ COUNT_IN_COLOR = (255, 205, 90)
 
 HOME_FREE_PLAY = "Jeu libre"
 HOME_SCORES = "Partitions"
+HOME_CAMERA_PLAY = "Jeu caméra"
 HOME_CALIBRATE = "Calibrer la caméra"
-HOME_ITEMS = [HOME_FREE_PLAY, HOME_SCORES, HOME_CALIBRATE]
+HOME_ITEMS = [HOME_FREE_PLAY, HOME_SCORES, HOME_CAMERA_PLAY, HOME_CALIBRATE]
 
 
 class Mode(Enum):
@@ -50,6 +52,7 @@ class Mode(Enum):
     PLAYING = auto()
     RESULT = auto()
     CALIBRATION = auto()
+    CAMERA_PLAY = auto()
 
 
 def create_window() -> pygame.Surface:
@@ -126,6 +129,7 @@ def run() -> None:
     judge: Judge | None = None
     tempo_factor = 1.0
     calibration: CalibrationScreen | None = None
+    camera_play: CameraPlayScreen | None = None
 
     full_area = screen.get_rect()
     highway_height = int(WINDOW_SIZE[1] * HIGHWAY_HEIGHT_FRACTION)
@@ -151,8 +155,11 @@ def run() -> None:
                 if _key_pressed(events, pygame.K_RETURN):
                     if home_menu.selected == HOME_FREE_PLAY:
                         mode = Mode.FREE_PLAY
+                    elif home_menu.selected == HOME_CAMERA_PLAY:
+                        camera_play = CameraPlayScreen.open(engine, kit_view, settings.camera)
+                        mode = Mode.CAMERA_PLAY
                     elif home_menu.selected == HOME_CALIBRATE:
-                        calibration = CalibrationScreen.open()
+                        calibration = CalibrationScreen.open(settings.camera)
                         mode = Mode.CALIBRATION
                     else:
                         style_menu = Menu(items=list(STYLES))
@@ -226,6 +233,13 @@ def run() -> None:
                     calibration = None
                     mode = Mode.HOME
 
+            elif mode == Mode.CAMERA_PLAY:
+                assert camera_play is not None
+                if not camera_play.update(events):
+                    camera_play.close()
+                    camera_play = None
+                    mode = Mode.HOME
+
             elif mode == Mode.RESULT:
                 assert score is not None
                 if _key_pressed(events, pygame.K_RETURN):
@@ -253,6 +267,7 @@ def run() -> None:
                     tempo_factor,
                     now_ns,
                     calibration,
+                    camera_play,
                 )
                 pygame.display.flip()
                 next_render = now + render_interval_s
@@ -261,6 +276,8 @@ def run() -> None:
     finally:
         if calibration is not None:
             calibration.close()
+        if camera_play is not None:
+            camera_play.close()
         pygame.quit()
 
 
@@ -281,6 +298,7 @@ def _draw(
     tempo_factor: float,
     now_ns: int,
     calibration: CalibrationScreen | None = None,
+    camera_play: CameraPlayScreen | None = None,
 ) -> None:
     screen.fill(BACKGROUND_COLOR)
 
@@ -324,6 +342,9 @@ def _draw(
 
     elif mode == Mode.CALIBRATION and calibration is not None:
         calibration.draw(screen, full_area)
+
+    elif mode == Mode.CAMERA_PLAY and camera_play is not None:
+        camera_play.draw(screen, full_area)
 
     elif mode == Mode.RESULT and score is not None:
         lines: list[tuple[str, int, tuple[int, int, int]]] = [

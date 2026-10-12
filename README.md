@@ -11,7 +11,7 @@ Batterie virtuelle pour Windows : jouez au clavier, suivez des partitions qui d�
 | --- | --- | --- |
 | V1 | Batterie au clavier | Terminé (`v0.1.0`) |
 | V2 | Partitions qui défilent | Terminé (`v0.2.0`) |
-| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept validée (`v0.3.0`) ; deux mains à venir |
+| V3 | Jeu à la caméra (mains, puis pieds) | Preuve de concept validée (`v0.3.0`) ; deux mains en cours (phase 04) |
 
 ## Installation (Windows)
 
@@ -126,7 +126,27 @@ imagines, la charleston fermée, la caisse claire, le tom médium puis le ride, 
 de gauche à droite. Les rectangles montrent où tu frappes, la ligne rouge où le coup se
 déclenchera. **Entrée** enregistre (`%APPDATA%\Batterie\zones.toml`), **Échap** annule sans
 rien changer, **R** recommence l'élément en cours. À refaire si ta caméra ou toi bougez.
-Le jeu à la caméra lui-même arrive à la PR suivante.
+
+## Jouer à la caméra (phase 04)
+
+Une fois les zones calibrées, choisis **Jeu caméra** à l'accueil : l'écran montre l'image
+de la caméra avec tes zones (pour voir si tu as bougé), le kit s'illumine et sonne à chaque
+coup de tes baguettes. L'écran affiche les images par seconde, le temps de traitement et ce que
+la caméra a réellement accordé (résolution, cadence). Sans zones calibrées, ou si la caméra est
+absente ou occupée, un message te dit quoi faire. **Échap** revient à l'accueil.
+
+Pour une autre caméra ou une cadence différente, ajoute une section `[camera]` à ton
+`%APPDATA%\Batterie\settings.toml` (le modèle écrit au premier lancement la décrit en
+commentaire ; sans cette section, rien ne change) :
+
+```toml
+[camera]
+device_index = 0   # numéro de la caméra
+width = 640
+height = 480
+fps = 30           # images par seconde demandées
+mjpeg = false      # true : souvent nécessaire pour 60 images/s
+```
 
 ## Documentation
 
