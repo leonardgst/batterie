@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pytest
 
-from batterie.input.vision.color_tracker import GREEN, ORANGE, ColorRange, find_marker
+from batterie.input.vision.color_tracker import BLUE, GREEN, ORANGE, ColorRange, find_marker
 
 IMAGE_SIZE = 200
 
@@ -127,3 +127,62 @@ def test_orange_and_green_ranges_do_not_pick_up_each_other():
     green_frame = _frame_with_square(_bgr_for_hsv(60, 200, 200), center=(50, 50), half_size=15)
     assert find_marker(orange_frame, GREEN) is None
     assert find_marker(green_frame, ORANGE) is None
+
+
+# --- Bleu fluo (main gauche, depuis la phase 04) ---
+
+# Jeans et vêtements bleus : teinte voisine du bleu fluo, mais saturation moyenne et/ou
+# luminosité basse. Valeurs synthétiques représentatives, pas des mesures.
+DENIM_HSV = [
+    (100, 90, 140),
+    (102, 100, 130),
+    (105, 120, 90),
+    (108, 140, 110),
+    (110, 150, 70),
+    (112, 110, 120),
+    (115, 140, 100),
+    (118, 100, 60),
+]
+VIVID_BLUE_HSV = (100, 230, 255)  # surligneur bleu fluo, tel qu'il apparaît à la caméra
+
+
+def test_find_marker_tracks_a_vivid_blue_blob():
+    frame = _frame_with_square(_bgr_for_hsv(*VIVID_BLUE_HSV), center=(60, 70), half_size=12)
+    point = find_marker(frame, BLUE)
+    assert point is not None
+    assert point.x == pytest.approx(60, abs=1)
+    assert point.y == pytest.approx(70, abs=1)
+
+
+@pytest.mark.parametrize("hue", [92, 100, 108, 116, 124])
+def test_blue_tracks_the_whole_fluo_blue_range(hue):
+    frame = _frame_with_square(_bgr_for_hsv(hue, 210, 240), center=(100, 100), half_size=15)
+    assert find_marker(frame, BLUE) is not None
+
+
+@pytest.mark.parametrize("denim_hsv", DENIM_HSV)
+def test_blue_does_not_track_jeans_or_dull_blue_clothes(denim_hsv):
+    frame = _frame_with_square(_bgr_for_hsv(*denim_hsv), center=(100, 100), half_size=40)
+    assert find_marker(frame, BLUE) is None
+
+
+@pytest.mark.parametrize("skin_hsv", SKIN_TONES_HSV)
+def test_blue_does_not_track_skin_tones(skin_hsv):
+    frame = _frame_with_square(_bgr_for_hsv(*skin_hsv), center=(100, 100), half_size=40)
+    assert find_marker(frame, BLUE) is None
+
+
+def test_dull_blue_is_deliberately_not_tracked():
+    # Le prix de la parade contre le jean : un bleu terne n'est pas suivi.
+    frame = _frame_with_square(_bgr_for_hsv(105, 110, 255), center=(100, 100), half_size=20)
+    assert find_marker(frame, BLUE) is None
+
+
+def test_blue_green_and_orange_ranges_do_not_pick_up_each_other():
+    blue = _frame_with_square(_bgr_for_hsv(*VIVID_BLUE_HSV), center=(50, 50), half_size=15)
+    green = _frame_with_square(_bgr_for_hsv(60, 200, 200), center=(50, 50), half_size=15)
+    orange = _frame_with_square(_bgr_for_hsv(*VIVID_ORANGE_HSV), center=(50, 50), half_size=15)
+    assert find_marker(blue, GREEN) is None
+    assert find_marker(blue, ORANGE) is None
+    assert find_marker(green, BLUE) is None
+    assert find_marker(orange, BLUE) is None

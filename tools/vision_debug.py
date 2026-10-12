@@ -23,12 +23,12 @@ import cv2
 import numpy as np
 import pygame
 
-from batterie.input.vision.color_tracker import GREEN, ORANGE, ColorRange
+from batterie.input.vision.color_tracker import BLUE, GREEN, ColorRange
 from batterie.input.vision.process import MarkerSpec, VisionSample, run_markers_process
 from batterie.input.vision.strike_detector import DEFAULT_MIN_SPEED_PX_PER_S, DEFAULT_REFRACTORY_S
 
 POINT_COLOR = (255, 205, 90)
-ORANGE_DISPLAY_COLOR = (255, 150, 40)
+BLUE_DISPLAY_COLOR = (70, 150, 255)
 GREEN_DISPLAY_COLOR = (90, 220, 120)
 
 
@@ -124,27 +124,27 @@ FOOT = TargetPreset(
     ),
 )
 
-# Deux mains (phase 04) — NON CALIBRÉ : main gauche = embout orange, main droite = embout
+# Deux mains (phase 04) — NON CALIBRÉ : main gauche = embout bleu fluo, main droite = embout
 # vert. Mêmes seuils et même plan de frappe que la baguette, qui ont suffi en phase 03 ;
 # les deux mains portent ici le même élément (« snare ») : attribuer chaque coup au bon
 # élément selon sa position est le travail des zones (PR 2 de la phase 04). L'image est
-# retournée en miroir (ta main gauche apparaît à gauche). La plage ORANGE est à régler
-# sur ton embout et ta lumière : un orange pâle n'est volontairement pas suivi (il
-# ressemblerait à ta peau) ; si le cercle s'accroche à ta main ou à ton visage, resserre
-# la saturation minimale dans ``ORANGE`` (color_tracker.py).
+# retournée en miroir (ta main gauche apparaît à gauche). La plage BLUE est à régler
+# sur ton embout et ta lumière : un bleu terne ou sombre n'est volontairement pas suivi (il
+# ressemblerait à un jean) ; si le cercle s'accroche à un vêtement ou à ton fond,
+# resserre la saturation minimale dans ``BLUE`` (color_tracker.py).
 HANDS = TargetPreset(
     label="deux mains",
     mirror=True,
     markers=(
         MarkerPreset(
             name="left",
-            label="Main gauche (orange)",
+            label="Main gauche (bleue)",
             element_id="snare",
-            color_range=ORANGE,
+            color_range=BLUE,
             strike_plane_y=150.0,
             min_speed_px_per_s=DEFAULT_MIN_SPEED_PX_PER_S,
             refractory_s=DEFAULT_REFRACTORY_S,
-            display_color=ORANGE_DISPLAY_COLOR,
+            display_color=BLUE_DISPLAY_COLOR,
         ),
         MarkerPreset(
             name="right",
@@ -184,7 +184,7 @@ def add_target_argument(parser: argparse.ArgumentParser) -> None:
         default=DEFAULT_TARGET,
         help=(
             "ce qu'on suit : stick = baguette (défaut), foot = pointe du pied (grosse caisse), "
-            "hands = deux mains (orange à gauche, vert à droite)"
+            "hands = deux mains (bleu à gauche, vert à droite)"
         ),
     )
 

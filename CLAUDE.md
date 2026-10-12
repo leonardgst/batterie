@@ -74,7 +74,7 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 **Phase 04 — Vision : deux mains, kit complet (V3.1)** → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
 Cadrée en 6 PR (deux mains, zones, calibration, jeu à la caméra, mesure US7, nuance) — voir le
-document de phase. Main gauche orange, main droite verte, bleu réservé au pied (phase 05).
+document de phase. Main gauche bleu fluo (orange puis rose essayés), main droite verte, jaune fluo réservé au pied (phase 05).
 Quatre éléments : charleston fermée, caisse claire, tom médium, ride (côte à côte dans l'image).
 
 Phases terminées :

@@ -1,4 +1,4 @@
-"""Les deux embouts du jeu à deux mains (phase 04) : main gauche orange, main droite verte.
+"""Les deux embouts du jeu à deux mains (phase 04) : main gauche bleu fluo, main droite verte.
 
 Une seule définition pour l'application et les outils (``tools/vision_debug.py`` en repart
 et un test vérifie qu'ils ne divergent pas). Valeurs de départ non calibrées : mêmes seuils
@@ -7,7 +7,7 @@ que la baguette, qui ont suffi en phase 03.
 
 from __future__ import annotations
 
-from batterie.input.vision.color_tracker import GREEN, ORANGE
+from batterie.input.vision.color_tracker import BLUE, GREEN
 from batterie.input.vision.process import MarkerSpec
 from batterie.input.vision.zones import ZoneMap
 
@@ -26,7 +26,7 @@ def hand_specs(zones: ZoneMap | None = None) -> list[MarkerSpec]:
     return [
         MarkerSpec(
             name=LEFT_HAND_NAME,
-            color_range=ORANGE,
+            color_range=BLUE,
             strike_plane_y=DEFAULT_STRIKE_PLANE_Y,
             element_id="snare",
             zones=zones,

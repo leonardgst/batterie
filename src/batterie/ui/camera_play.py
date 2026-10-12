@@ -195,7 +195,7 @@ class CameraPlayScreen:
             if self.camera is not None:
                 write(self._camera_line(self.camera), self._font, TEXT_COLOR)
             write(f"coups : {self.hits}", self._font, TEXT_COLOR)
-            for name, label in (("left", "gauche (orange)"), ("right", "droite (verte)")):
+            for name, label in (("left", "gauche (bleue)"), ("right", "droite (verte)")):
                 if name in sample.markers and sample.markers[name].point is None:
                     write(f"main {label} : non vue", self._small_font, ERROR_COLOR)
         y += 10
