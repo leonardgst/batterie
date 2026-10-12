@@ -41,12 +41,13 @@ GREEN = ColorRange(lower=(40, 80, 60), upper=(85, 255, 255))
 # Conséquence voulue : un orange pâle n'est pas suivi, il faut un ruban ou un embout orange
 # fluo. NON CALIBRÉ : à régler sur ton embout et ta lumière avec ``vision_debug.py --target hands``.
 ORANGE = ColorRange(lower=(5, 160, 120), upper=(22, 255, 255))
-# Rose fluo (surligneur rose classique ; main gauche depuis la phase 04, à la place de
-# l'orange) : teinte 158 à 179 (le rose fluo est vers 165-170, la peau vers 0-20, donc loin),
-# saturation minimale 130 pour ne pas suivre les roses pâles (lèvres, vêtements, peau très
-# rouge). Un rose pâle n'est volontairement pas suivi : il faut un embout fluo. NON CALIBRÉ :
-# à régler sur ton embout et ta lumière avec ``vision_debug.py --target hands``.
-PINK = ColorRange(lower=(158, 130, 130), upper=(179, 255, 255))
+# Bleu fluo (surligneur bleu ; main gauche depuis la phase 04, à la place de l'orange) :
+# teinte 90 à 125 (cyan-bleu), loin du vert (≤ 85), de la peau (0-20) et du rose. Saturation
+# ≥ 150 et luminosité ≥ 130 pour ne pas suivre un jean ou un vêtement bleu (teinte voisine,
+# mais saturation moyenne et luminosité basse). Un bleu terne ou sombre n'est volontairement
+# pas suivi : il faut un embout fluo. NON CALIBRÉ : à régler sur ton embout et ta lumière avec
+# ``vision_debug.py --target hands``.
+BLUE = ColorRange(lower=(90, 150, 130), upper=(125, 255, 255))
 MAGENTA = ColorRange(lower=(140, 80, 60), upper=(170, 255, 255))
 
 

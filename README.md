@@ -112,14 +112,14 @@ uv run python tools/vision_measure.py    # séance mesurée : 50 coups à 80 BPM
 Les deux outils suivent par défaut la baguette (`--target stick`, caisse claire).
 `--target foot` suit la pointe du pied (grosse caisse), pour tester la webcam intégrée
 posée au sol ; ce préréglage n'est pas calibré. `--target hands` suit les deux mains
-(embout rose fluo à gauche, vert à droite, image en miroir) : phase 04, aussi non calibré.
+(embout bleu fluo à gauche, vert à droite, image en miroir) : phase 04, aussi non calibré.
 Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --simulate`.
 Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
 [pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 
 ## Calibrer la caméra (phase 04)
 
-Pour jouer avec tes deux baguettes (embout rose fluo à gauche, vert à droite), l'application
+Pour jouer avec tes deux baguettes (embout bleu fluo à gauche, vert à droite), l'application
 doit savoir où se trouve chaque élément dans l'image de ta caméra. Depuis l'accueil,
 choisis **Calibrer la caméra** : l'écran te demande de frapper, à l'endroit où tu les
 imagines, la charleston fermée, la caisse claire, le tom médium puis le ride, 3 coups chacun,

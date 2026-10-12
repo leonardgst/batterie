@@ -14,7 +14,7 @@ Référence : [cadrage](../00-cadrage.md) §5 (phase 04), exigences M9 (coup de 
 ## Point de départ (phase 03, ADR 0002)
 
 - Une baguette suivie par la webcam intégrée : 48 à 50 coups sur 50, 0 faux coup, 31,2 images/s, retard par rapport au clavier ≤ 55 ms. Les outils `tools/vision_debug.py` et `tools/vision_measure.py` (préréglages de cible) servent de base.
-- **Couleurs (choisies le 2026-10-10)** : **main gauche orange, main droite verte**. *Changement du 2026-10-12 : la main gauche passe au **rose fluo** (surligneur rose classique, plage `PINK`), l'orange étant gardé en préréglage ; voir le journal.* Le bleu est réservé au pied (phase 05).
+- **Couleurs (choisies le 2026-10-10, changées le 2026-10-12)** : **main gauche bleu fluo** (surligneur bleu, plage `BLUE`), **main droite verte**. Historique : l'orange (plage `ORANGE`, conservée) était trop proche de la peau, le rose fluo essayé ensuite n'a pas convenu à l'essai. Le **jaune fluo** est réservé au pied (phase 05) : le bleu avait d'abord été prévu pour le pied, mais il est maintenant pris par la main, et le jaune se distingue du jean et du sol.
 - **Caméra** : la phase démarre avec la webcam intégrée. Une webcam 60 images/s d'occasion (C922 ou StreamCam, ~40 €) est prévue pour les mains, en hauteur face à toi (disposition du cadrage §7, note du 2026-10-10). La décision d'achat se prend sur des chiffres après la PR 4, dans l'ADR 0004.
 - **Réserves de l'ADR 0002 à lever ici** : deux mains (confusion de couleur), plusieurs éléments (attribution), tenue à 90 BPM en croches, retard détection + son au ras de 60 ms.
 - **Pieds** : test anticipé en phase 03, suivi correct mais retard de +109 ms sur une séance ; décision pour les pieds repoussée au début de la phase 05. La phase 04 n'en dépend pas.
@@ -26,7 +26,7 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 ## Prérequis
 
 - [x] Couleurs : main gauche orange, main droite verte (embout vert : ta brosse à dents de la phase 03)
-- [ ] Un embout **rose fluo** (surligneur rose classique, pas un rose pâle), pour la main gauche (c'était un orange vif avant le 2026-10-12)
+- [ ] Un embout **bleu fluo** (surligneur bleu, pas un bleu terne ou sombre), pour la main gauche (c'était un orange vif avant le 2026-10-12)
 - [ ] Phase découpée en PR (fait par ce document)
 
 ## Livrables
@@ -79,6 +79,7 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - **Les zones dépendent de ta position.** Elles sont calibrées dans l'image de la caméra : si tu bouges ou que la caméra bouge, elles ne correspondent plus. D'où l'affichage des zones sur l'aperçu pendant le jeu, et une calibration courte (3 frappes par élément).
 - **Retard au ras du critère.** Détection ≤ 55 ms + ≈ 5 ms de son : pile sur 60 ms avec la webcam à 30 images/s. Parade : la caméra 60 images/s ; l'ADR 0004 tranche sur les chiffres de la PR 4 et de la PR 5.
 - **Caméra 60 images/s non testable ici.** Le code demande résolution et cadence, affiche ce qu'il obtient, et marche aussi avec ta webcam intégrée à 30 images/s ; le comportement réel de la nouvelle caméra (MJPEG, cadence, exposition) ne se vérifiera qu'avec toi, une fois achetée.
+- **Bleu et jean.** Un jean ou un vêtement bleu a une teinte voisine du bleu fluo, mais une saturation moyenne et une luminosité basse : la plage `BLUE` exige les deux (saturation ≥ 150, luminosité ≥ 130), donc un bleu terne n'est pas suivi (testé sur des teintes de jean synthétiques). Si ton vêtement ou ton fond s'accroche quand même, resserrer la plage.
 - **Éclairage.** L'orange change de teinte selon la lumière (lampe chaude contre lumière du jour) : la plage est à régler dans ta pièce, avec l'outil de débogage.
 
 ## Hors périmètre (phases suivantes)
