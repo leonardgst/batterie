@@ -46,10 +46,10 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [x] Tests : mains qui alternent sur 4 zones, rebond et tremblement ignorés, diagonale, validation, aller-retour de lecture/écriture
 
 **PR 3 — Écran de calibration guidée** (`feat/vision-calibration`) — M11
-- [ ] `input/vision/calibration.py` (logique pure) : à partir de quelques coups enregistrés sur un élément, calcule sa zone (rectangle avec marge, plan de frappe réglé sur la course réelle du geste)
-- [ ] Écran dans l'application (entrée « Calibrer la caméra » à l'accueil) : aperçu miroir, l'élément à frapper mis en évidence sur le kit, « frappe-le 3 fois », puis l'élément suivant ; Échap abandonne sans rien écraser ; enregistre `zones.toml`
-- [ ] Les zones restent affichées sur l'aperçu pendant le jeu (voir si tu as bougé depuis la calibration)
-- [ ] ADR 0003 : zones en rectangles, calibration guidée par des frappes (pas de dessin à la souris), `zones.toml` séparé
+- [x] `input/vision/calibration.py` (logique pure) : repère les coups dans la trajectoire de l'embout, calcule la zone de chaque élément (rectangle avec marge, plan de frappe réglé sur la course réelle du geste), sépare deux zones voisines qui se chevauchent, et déroule la calibration élément par élément
+- [x] Écran dans l'application (entrée « Calibrer la caméra » à l'accueil) : aperçu miroir avec les zones au fur et à mesure, « Frappe : Caisse claire — coup 2 / 3 », liste des éléments faits, R pour recommencer un élément, validation par Entrée ; Échap abandonne sans rien écraser ; enregistre `zones.toml`
+- [ ] Les zones restent affichées sur l'aperçu pendant le jeu (voir si tu as bougé depuis la calibration) — fonction de dessin livrée ici (`ui/camera_view.py`), utilisée dans le jeu à la PR 4
+- [x] ADR 0003 : zones en rectangles, calibration guidée par des frappes (pas de dessin à la souris), `zones.toml` séparé
 - [ ] Nécessite ta webcam : calibrer tes 4 zones et vérifier qu'elles tiennent
 
 **PR 4 — Jouer à la caméra dans l'application** (`feat/vision-play`) — M9
@@ -96,10 +96,16 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 ## Décisions prises (liens vers les ADR)
 
 - [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) (héritée de la phase 03)
-- ADR 0003 (zones et calibration) — à écrire en PR 3
+- [ADR 0003 — Zones de frappe et calibration par frappes guidées](../adr/0003-zones-et-calibration.md) — proposé, à confirmer par ton essai de la PR 3
 - ADR 0004 (caméra des mains : achat ou non) — à écrire à la clôture
 
 ## Écarts par rapport au plan
+
+- **PR 3 — le flux caméra de l'application arrive ici, pas en PR 4.** L'écran de calibration a besoin de lancer le processus vision et de lire ses images : `input/vision/source.py` (`VisionFeed`) est créé dans cette PR, la PR 4 le complètera pour le jeu. De même `input/vision/hands.py` : une seule définition des deux mains (orange, verte, miroir) pour l'application et pour `tools/vision_debug.py`, avec un test qui vérifie qu'ils ne divergent pas.
+- **PR 3 — l'élément à frapper est annoncé dans la colonne de droite, pas en surbrillance sur le kit.** « Frappe : Caisse claire », avec la liste des quatre éléments cochés au fur et à mesure et les zones déjà calibrées tracées sur l'aperçu ; le dessin du kit n'est pas affiché pendant la calibration.
+- **PR 3 — l'affichage des zones pendant le jeu passe en PR 4.** Le jeu à la caméra n'existe pas encore ; la fonction de dessin des zones est prête et déjà utilisée par l'écran de calibration.
+- **PR 3 — garde-fous plus stricts que prévu, trouvés par un essai de bout en bout.** Avec une caméra fictive qui donne un coup de trop sur chaque élément, ce coup tombait juste après la fin de l'attente et comptait pour l'élément suivant, avec une dispersion maximale de 90 px qui laissait passer une zone élargie à tort. Attente portée à 1,5 s et dispersion maximale à 50 px (explication dans l'ADR 0003).
+- **PR 3 — sens de `Zone.y_top`.** C'est la hauteur d'où part le coup *le moins relevé*, pas le point le plus haut atteint : c'est ce qui garantit que chacun de tes coups se ré-arme (précision apportée à la docstring de PR 2).
 
 - **PR 2 — les zones sont branchées dans le processus vision dès cette PR.** Le plan ne prévoyait que la logique pure, mais le coup est détecté dans le processus vision (c'est lui qui voit les images, cadrage §4.1) : `MarkerSpec` accepte donc des `zones`, et un `ZoneStrikeDetector` par main attribue chaque coup à l'élément frappé. Ça permet aussi de tester l'attribution à travers le vrai pipeline, sur des images synthétiques à deux mains. Rien n'est encore utilisé par les outils ni par l'application : les zones n'existent pas avant la calibration (PR 3).
 - **PR 2 — ré-armement : valeurs de départ.** Après un coup, la main doit remonter au-dessus du plan d'un quart de la hauteur de la zone (au moins 4 px) avant de pouvoir frapper de nouveau, en plus de l'anti-rebond de 0,15 s. Conséquence à garder en tête : un geste dont l'amplitude est inférieure à cette marge ne se ré-arme pas ; la calibration (PR 3) règle le haut de chaque zone sur la course réelle du geste. Quart et minimum sont à ajuster en jouant (PR 4).

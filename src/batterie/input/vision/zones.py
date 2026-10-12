@@ -35,8 +35,9 @@ MIN_REARM_PX = 4.0
 class Zone:
     """Rectangle de l'image où l'on frappe un élément, et son plan de frappe.
 
-    ``y_top`` est le plus haut où monte l'embout avant de frapper, ``y_bottom`` le plus
-    bas où il descend, ``strike_plane_y`` la ligne dont le franchissement vers le bas
+    ``y_top`` est la hauteur d'où part le coup (à la calibration : celle du coup le moins
+    relevé, donc une hauteur que tous tes coups atteignent), ``y_bottom`` le plus bas où
+    l'embout descend, ``strike_plane_y`` la ligne dont le franchissement vers le bas
     déclenche le coup (entre les deux).
     """
 

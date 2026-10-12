@@ -36,3 +36,4 @@ _À documenter en phase 01 : fréquence de lecture des entrées, rendu, horloge 
 
 - [ADR 0001 — Choix du moteur audio](adr/0001-choix-du-moteur-audio.md)
 - [ADR 0002 — Vision : go/no-go et choix de caméra](adr/0002-vision-go-no-go-et-camera.md) (accepté : go, sans achat de caméra pour l'instant)
+- [ADR 0003 — Zones de frappe et calibration par frappes guidées](adr/0003-zones-et-calibration.md) (proposé, à confirmer par l'essai de la calibration)
