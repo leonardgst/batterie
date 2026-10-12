@@ -2,7 +2,7 @@
 
 | Statut | Date | Phase |
 | --- | --- | --- |
-| Proposé — à accepter par l'utilisateur en fusionnant la PR de clôture de la phase 04 | 2026-10-12 | 04 |
+| Accepté par l'utilisateur le 2026-10-12 (avec l'ADR 0003 et le critère US7 « 2 séances sur 3 ») ; il pourra y revenir si le jeu ne lui paraît pas satisfaisant à l'usage | 2026-10-12 | 04 |
 
 ## Contexte
 
