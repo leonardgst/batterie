@@ -31,6 +31,7 @@ from batterie.input.vision.strike_detector import (
     DEFAULT_REFRACTORY_S,
     StrikeDetector,
 )
+from batterie.input.vision.velocity import SpeedWindow, VelocityCurve
 from batterie.input.vision.zones import ZoneMap, ZoneStrikeDetector
 
 WORKING_WIDTH = 320
@@ -54,6 +55,7 @@ class MarkerSpec:
     min_speed_px_per_s: float = DEFAULT_MIN_SPEED_PX_PER_S
     refractory_s: float = DEFAULT_REFRACTORY_S
     zones: ZoneMap | None = None
+    velocity_curve: VelocityCurve | None = None  # nuance : sans courbe, tout coup vaut 1.0
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,7 @@ class MarkerSample:
     point: TrackedPoint | None
     velocity_px_per_s: float
     hit_event: HitEvent | None
+    hit_speed_px_per_s: float | None = None  # vitesse de descente d'un coup (avec ``hit_event``)
 
 
 @dataclass(frozen=True)
@@ -184,6 +187,7 @@ class _MarkerState:
             min_speed_px_per_s=spec.min_speed_px_per_s,
             refractory_s=spec.refractory_s,
         )
+        self.speeds = SpeedWindow()
         self.last_point: TrackedPoint | None = None
         self.last_t_ns: int | None = None
 
@@ -197,18 +201,31 @@ class _MarkerState:
                 if dt_s > 0:
                     velocity = (point.y - self.last_point.y) / dt_s
             t_s = t_ns / 1_000_000_000
+            self.speeds.add(t_s, point.y)
             element_id: str | None = None
             if self.zone_detector is not None:
                 zone = self.zone_detector.update(t_s, point.x, point.y)
                 element_id = zone.element_id if zone is not None else None
             elif self.detector.update(t_s, point.y):
                 element_id = self.spec.element_id
+            hit_speed: float | None = None
             if element_id is not None:
+                hit_speed = self.speeds.peak_downward_speed()
+                curve = self.spec.velocity_curve
                 hit_event = HitEvent(
-                    element_id=element_id, velocity=1.0, t_ns=t_ns, source=Source.VISION
+                    element_id=element_id,
+                    velocity=curve.velocity(hit_speed) if curve is not None else 1.0,
+                    t_ns=t_ns,
+                    source=Source.VISION,
                 )
             self.last_point = point
             self.last_t_ns = t_ns
+            return MarkerSample(
+                point=point,
+                velocity_px_per_s=velocity,
+                hit_event=hit_event,
+                hit_speed_px_per_s=hit_speed,
+            )
         return MarkerSample(point=point, velocity_px_per_s=velocity, hit_event=hit_event)
 
 

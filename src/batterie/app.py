@@ -156,7 +156,9 @@ def run() -> None:
                     if home_menu.selected == HOME_FREE_PLAY:
                         mode = Mode.FREE_PLAY
                     elif home_menu.selected == HOME_CAMERA_PLAY:
-                        camera_play = CameraPlayScreen.open(engine, kit_view, settings.camera)
+                        camera_play = CameraPlayScreen.open(
+                            engine, kit_view, settings.camera, velocity=settings.velocity
+                        )
                         mode = Mode.CAMERA_PLAY
                     elif home_menu.selected == HOME_CALIBRATE:
                         calibration = CalibrationScreen.open(settings.camera)

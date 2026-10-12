@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from batterie.input.vision.color_tracker import BLUE, GREEN
 from batterie.input.vision.process import MarkerSpec
+from batterie.input.vision.velocity import VelocityCurve
 from batterie.input.vision.zones import ZoneMap
 
 # L'image est retournée en miroir : ta main gauche apparaît à gauche, comme sur le kit.
@@ -21,8 +22,11 @@ RIGHT_HAND_NAME = "right"
 DEFAULT_STRIKE_PLANE_Y = 150.0
 
 
-def hand_specs(zones: ZoneMap | None = None) -> list[MarkerSpec]:
-    """Les deux embouts à suivre ; avec ``zones``, chaque coup est attribué à son élément."""
+def hand_specs(
+    zones: ZoneMap | None = None, velocity_curve: VelocityCurve | None = None
+) -> list[MarkerSpec]:
+    """Les deux embouts à suivre ; avec ``zones``, chaque coup est attribué à son élément,
+    et avec ``velocity_curve`` la vitesse du geste règle le volume."""
     return [
         MarkerSpec(
             name=LEFT_HAND_NAME,
@@ -30,6 +34,7 @@ def hand_specs(zones: ZoneMap | None = None) -> list[MarkerSpec]:
             strike_plane_y=DEFAULT_STRIKE_PLANE_Y,
             element_id="snare",
             zones=zones,
+            velocity_curve=velocity_curve,
         ),
         MarkerSpec(
             name=RIGHT_HAND_NAME,
@@ -37,5 +42,6 @@ def hand_specs(zones: ZoneMap | None = None) -> list[MarkerSpec]:
             strike_plane_y=DEFAULT_STRIKE_PLANE_Y,
             element_id="snare",
             zones=zones,
+            velocity_curve=velocity_curve,
         ),
     ]

@@ -8,18 +8,20 @@ avec les zones et les embouts, reste affiché pour voir si tu as bougé depuis l
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
 from typing import Protocol
 
 import pygame
 
-from batterie.config.settings import CameraSettings
+from batterie.config.settings import CameraSettings, VelocitySettings
 from batterie.config.zones import ZonesError, load_zones, zones_path
 from batterie.core.elements import ELEMENTS_BY_ID
 from batterie.input.vision.hands import HANDS_MIRROR, hand_specs
 from batterie.input.vision.process import WORKING_WIDTH, CameraInfo
 from batterie.input.vision.source import VisionFeed
+from batterie.input.vision.velocity import curve_from_settings
 from batterie.input.vision.zones import ZoneMap
 from batterie.ui.calibration import CAMERA_LOST_MESSAGE, wrap_text
 from batterie.ui.camera_view import draw_frame, draw_markers, draw_zones, scale_for
@@ -48,6 +50,15 @@ class Player(Protocol):
     def play(self, element_id: str, velocity: float = 1.0) -> None: ...
 
 
+@dataclass(frozen=True)
+class LastHit:
+    """Le dernier coup joué : pour régler la nuance en voyant vitesse et volume."""
+
+    element_id: str
+    speed_px_per_s: float | None
+    velocity: float
+
+
 class Phase(Enum):
     STARTING = auto()  # la caméra s'ouvre
     PLAYING = auto()
@@ -73,6 +84,8 @@ class CameraPlayScreen:
         self.kit_view = kit_view
         self.error = error
         self.hits = 0
+        self.last_hit: LastHit | None = None
+        self.nuance = False  # vrai quand la vitesse du geste règle le volume
         self.camera: CameraInfo | None = None
         if feed is None:
             self.phase = Phase.ERROR if error else Phase.NO_ZONES
@@ -91,6 +104,7 @@ class CameraPlayScreen:
         kit_view: KitView,
         camera: CameraSettings,
         *,
+        velocity: VelocitySettings | None = None,
         zones_file: Path | None = None,
     ) -> CameraPlayScreen:
         """Charge tes zones puis ouvre la caméra ; sans zones valides, la caméra reste fermée."""
@@ -101,10 +115,13 @@ class CameraPlayScreen:
             return cls(None, ZoneMap(), engine, kit_view, error=message)
         if not len(zones):
             return cls(None, zones, engine, kit_view)
+        curve = curve_from_settings(velocity) if velocity is not None else None
         feed = VisionFeed.start(
-            hand_specs(zones), mirror=HANDS_MIRROR, send_frames=True, camera=camera
+            hand_specs(zones, curve), mirror=HANDS_MIRROR, send_frames=True, camera=camera
         )
-        return cls(feed, zones, engine, kit_view)
+        screen = cls(feed, zones, engine, kit_view)
+        screen.nuance = curve is not None
+        return screen
 
     # --- Logique ----------------------------------------------------------
 
@@ -114,10 +131,14 @@ class CameraPlayScreen:
             samples = self.feed.poll()
             # Le son d'abord, sur tous les coups arrivés : rien ne passe avant lui.
             for sample in samples:
-                for hit in sample.hit_events:
+                for marker in sample.markers.values():
+                    hit = marker.hit_event
+                    if hit is None:
+                        continue
                     self.engine.play(hit.element_id, hit.velocity)
                     self.kit_view.flash(hit.element_id)
                     self.hits += 1
+                    self.last_hit = LastHit(hit.element_id, marker.hit_speed_px_per_s, hit.velocity)
                 if sample.camera is not None:
                     self.camera = sample.camera
             if samples and self.phase is Phase.STARTING:
@@ -178,6 +199,20 @@ class CameraPlayScreen:
         draw_zones(screen, PREVIEW_ORIGIN, scale, self.zones, self._small_font)
         draw_markers(screen, PREVIEW_ORIGIN, scale, sample)
 
+    def _nuance_lines(self) -> list[str]:
+        """Vitesse et volume du dernier coup : de quoi régler ``[velocity]`` en jouant."""
+        if not self.nuance:
+            return ["nuance : désactivée (tous les coups à fond)"]
+        if self.last_hit is None:
+            return ["nuance : joue un coup pour voir sa vitesse"]
+        hit = self.last_hit
+        speed = "?" if hit.speed_px_per_s is None else f"{hit.speed_px_per_s:.0f} px/s"
+        label = ELEMENTS_BY_ID[hit.element_id].label_fr
+        return [
+            f"dernier coup : {label}",
+            f"  vitesse {speed} -> volume {hit.velocity * 100:.0f} %",
+        ]
+
     def _draw_status(self, screen: pygame.Surface) -> None:
         x, y = PANEL_X, PREVIEW_ORIGIN[1]
 
@@ -195,6 +230,8 @@ class CameraPlayScreen:
             if self.camera is not None:
                 write(f"caméra : {self.camera.describe()}", self._font, TEXT_COLOR)
             write(f"coups : {self.hits}", self._font, TEXT_COLOR)
+            for line in self._nuance_lines():
+                write(line, self._font, TEXT_COLOR)
             for name, label in (("left", "gauche (bleue)"), ("right", "droite (verte)")):
                 if name in sample.markers and sample.markers[name].point is None:
                     write(f"main {label} : non vue", self._small_font, ERROR_COLOR)

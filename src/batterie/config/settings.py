@@ -9,7 +9,7 @@ ou tes commentaires.
 from __future__ import annotations
 
 import tomllib
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 import tomli_w
@@ -44,6 +44,23 @@ class CameraSettings:
     mjpeg: bool = False  # format compressé MJPEG : souvent nécessaire pour 60 images/s
 
 
+@dataclass(frozen=True)
+class VelocitySettings:
+    """Nuance du jeu à la caméra (section facultative ``[velocity]`` de ``settings.toml``).
+
+    La vitesse du geste règle le volume : ``soft_speed`` (px/s dans l'image réduite) donne le
+    volume ``floor``, ``hard_speed`` le volume maximal, ``gamma`` courbe l'entre-deux.
+    ``enabled = false`` : tous les coups sonnent à fond, comme avant. Voir
+    ``input/vision/velocity.py``.
+    """
+
+    enabled: bool = True
+    soft_speed: float = 200.0
+    hard_speed: float = 900.0
+    floor: float = 0.3
+    gamma: float = 1.0
+
+
 @dataclass
 class Settings:
     """Touches personnalisées (id d'élément -> nom de scancode), volume (0.0 à 1.0), caméra."""
@@ -51,6 +68,7 @@ class Settings:
     key_map: dict[str, str] = field(default_factory=_default_key_map)
     volume: float = 1.0
     camera: CameraSettings = field(default_factory=CameraSettings)
+    velocity: VelocitySettings = field(default_factory=VelocitySettings)
 
 
 def _clamp01(value: float) -> float:
@@ -74,6 +92,34 @@ def _camera_from_data(data: dict) -> CameraSettings:
         fps=positive_int("fps", default.fps, 1),
         mjpeg=bool(data.get("mjpeg", default.mjpeg)),
     )
+
+
+def _velocity_from_data(data: dict) -> VelocitySettings:
+    """Lit la section ``[velocity]`` ; une valeur invalide, ou une courbe incohérente
+    (``soft_speed`` pas inférieur à ``hard_speed``, ``floor`` hors de 0 à 1), garde les
+    valeurs par défaut."""
+    default = VelocitySettings()
+
+    def number(name: str, fallback: float) -> float:
+        value = data.get(name, fallback)
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            return fallback
+        return float(value)
+
+    enabled = data.get("enabled", default.enabled)
+    candidate = VelocitySettings(
+        enabled=enabled if isinstance(enabled, bool) else default.enabled,
+        soft_speed=number("soft_speed", default.soft_speed),
+        hard_speed=number("hard_speed", default.hard_speed),
+        floor=number("floor", default.floor),
+        gamma=number("gamma", default.gamma),
+    )
+    coherent = (
+        0 <= candidate.soft_speed < candidate.hard_speed
+        and 0.0 <= candidate.floor <= 1.0
+        and candidate.gamma > 0
+    )
+    return candidate if coherent else replace(default, enabled=candidate.enabled)
 
 
 def _render_default_template() -> str:
@@ -106,6 +152,16 @@ def _render_default_template() -> str:
         "# fps = 30           # images par seconde demandées",
         "# mjpeg = false      # true : format MJPEG, souvent nécessaire pour 60 images/s",
         "",
+        "# Nuance (jeu à la caméra) : la vitesse de ton geste règle le volume du coup.",
+        "# L'écran « Jeu caméra » affiche la vitesse et le volume de ton dernier coup : joue",
+        "# doucement puis fort, et règle soft_speed / hard_speed d'après ce que tu lis.",
+        "# [velocity]",
+        "# enabled = true      # false : tous les coups sonnent à fond",
+        '# soft_speed = 200    # vitesse (px/s) d\'un coup doux = volume "floor"',
+        "# hard_speed = 900    # vitesse (px/s) d'un coup fort = volume maximal",
+        "# floor = 0.3         # volume du coup le plus doux (0 à 1)",
+        "# gamma = 1.0         # courbe : > 1 garde les coups moyens doux, < 1 les rend forts",
+        "",
     ]
     return "\n".join(lines)
 
@@ -128,13 +184,19 @@ def load_settings(path: Path | None = None) -> Settings:
     key_map = {**_default_key_map(), **data.get("keys", {})}
     volume = _clamp01(float(data.get("volume", 1.0)))
     camera = _camera_from_data(data.get("camera", {}))
-    return Settings(key_map=key_map, volume=volume, camera=camera)
+    velocity = _velocity_from_data(data.get("velocity", {}))
+    return Settings(key_map=key_map, volume=volume, camera=camera, velocity=velocity)
 
 
 def save_settings(settings: Settings, path: Path | None = None) -> None:
     """Écrit ``settings`` dans ``path`` (ou le chemin par défaut), sans commentaires."""
     target = path if path is not None else settings_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    data = {"volume": settings.volume, "keys": settings.key_map, "camera": asdict(settings.camera)}
+    data = {
+        "volume": settings.volume,
+        "keys": settings.key_map,
+        "camera": asdict(settings.camera),
+        "velocity": asdict(settings.velocity),
+    }
     with target.open("wb") as handle:
         tomli_w.dump(data, handle)
