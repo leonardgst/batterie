@@ -72,12 +72,11 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 ## 8. Phase en cours
 
-**Phase 04 — Vision : deux mains, kit complet (V3.1)** → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
-Cadrée en 6 PR (deux mains, zones, calibration, jeu à la caméra, mesure US7, nuance) — voir le
-document de phase. Main gauche bleu fluo (orange puis rose essayés), main droite verte, jaune fluo réservé au pied (phase 05).
-Quatre éléments : charleston fermée, caisse claire, tom médium, ride (côte à côte dans l'image).
+**Phase 05 — Vision : pieds (V3.2)** → [docs/phases/phase-05-pieds.md](docs/phases/phase-05-pieds.md) — à cadrer
+Grosse caisse et pédale de charleston au pied (webcam intégrée au sol, sinon pédales USB, décision au début de la phase) ; jaune fluo réservé au pied. Elle démarre par la séance de confirmation du pied et la décision d'achat de la caméra des mains ([ADR 0004](docs/adr/0004-camera-des-mains.md)).
 
 Phases terminées :
+- Phase 04 — Vision : deux mains, kit complet (V3.1) terminée le 2026-10-12, tag `v0.4.0` ; main gauche bleu fluo, main droite verte, quatre éléments côte à côte, US7 tenue dans 2 séances sur 3 à 90 BPM, pas d'achat de caméra pour l'instant (ADR 0004) → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
 - Phase 03 — Vision : preuve de concept (V3.0) terminée le 2026-10-10, tag `v0.3.0`, décision go sans achat de caméra (ADR 0002) → [docs/phases/phase-03-vision-poc.md](docs/phases/phase-03-vision-poc.md)
 - Phase 02 — Partitions (V2) terminée le 2026-10-09, tag `v0.2.0` → [docs/phases/phase-02-partitions.md](docs/phases/phase-02-partitions.md)
 - Phase 01 — Batterie au clavier (V1, MVP) terminée le 2026-10-09, tag `v0.1.0` → [docs/phases/phase-01-batterie-clavier.md](docs/phases/phase-01-batterie-clavier.md)

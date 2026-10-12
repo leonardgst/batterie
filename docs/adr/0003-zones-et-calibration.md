@@ -2,7 +2,7 @@
 
 | Statut | Date | Phase |
 | --- | --- | --- |
-| Proposé — à confirmer par ton essai de la calibration devant la caméra | 2026-10-10 | 04 |
+| Accepté — confirmé par l'essai de la calibration devant la caméra et les séances de mesure qui s'appuient sur ses zones (2026-10-12) | 2026-10-10 | 04 |
 
 ## Contexte
 

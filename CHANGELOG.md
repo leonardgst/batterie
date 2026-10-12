@@ -5,6 +5,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
+Phase 04 — Vision : deux mains, kit complet (V3.1) : deux baguettes (embout bleu fluo à gauche, vert à droite) sur quatre éléments (charleston fermée, caisse claire, tom médium, ride), calibrées, jouées dans l'application avec nuance, et mesurées contre le critère US7.
+
 ### Added
 
 - Diagnostic des coups manqués (phase 04, PR 7) : la séance de mesure US7 (`--pattern`) indique maintenant, après les critères, la détection **position par position** du motif et main par main, et la **cause probable de chaque coup manqué** (embout non vu, plan de frappe jamais atteint avec l'écart en pixels, plan franchi hors de la zone, geste trop lent, main pas assez remontée), d'après la trajectoire de l'embout autour du clic (des coordonnées, jamais d'images). Logique pure dans `input/vision/diagnosis.py`.
@@ -24,6 +28,11 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) · Versions : 
 - Nuance : le volume monte maintenant en décibels et non en amplitude linéaire (`floor ** (1 − x)`), avec un volume minimal par défaut de 0,1 (−20 dB) au lieu de 0,3 : l'ancienne courbe ne donnait que 10 dB entre un coup doux et un coup fort, à peine audibles. `floor` doit être strictement supérieur à 0 dans `[velocity]` (une valeur invalide retombe sur les défauts). Rien d'autre ne change : vitesses de départ et réglages identiques.
 - `tools/vision_measure.py` : `parse_arguments` renvoie un objet `Options` (cible, simulation, séance US7) ; le rapport d'une séance de la phase 03 est inchangé. `SessionPlan` gagne `clicks_per_beat`, `pattern` et `detection_target` (valeurs par défaut de la phase 03).
 - `VisionSample` porte maintenant un échantillon par embout (`markers`) ; `point`, `velocity_px_per_s` et `hit_event` restent disponibles pour le premier embout, donc la baguette et le pied marchent comme avant. Dans les outils, un préréglage de cible (`TargetPreset`) regroupe maintenant un ou plusieurs embouts (`MarkerPreset`).
+
+### Validated
+
+- Mesures US7 par l'utilisateur (webcam intégrée, 640×480, 31 images/s, 100 croches à 90 BPM, motif de 8 sur 4 éléments, deux mains) : détection 98 %, 86 % puis 99 % ; faux coups 1, 1 et 0 ; coups sur le bon élément 100 %, 100 % et 99 % ; latence geste → son +17 ms sur la seule séance exploitable (référence clavier −10 ms). Le critère est tenu dans 2 séances sur 3 ; la séance à 86 % s'explique par la course de la caisse claire de la main gauche. Détail, séances à 70 BPM et réserves dans l'[ADR 0004](docs/adr/0004-camera-des-mains.md) (**décision proposée : pas d'achat de caméra maintenant, à trancher au début de la phase 05**).
+- Calibration, jeu à la caméra et nuance essayés par l'utilisateur : « tout est bien » ; volume de la charleston fermée et de la caisse claire corrigés après son retour.
 
 ## [0.3.0] - 2026-10-10
 
