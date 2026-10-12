@@ -72,8 +72,8 @@ Les autorisations correspondantes sont dans `.claude/settings.json`.
 
 ## 8. Phase en cours
 
-**Phase 05 — Vision : pieds (V3.2)** → [docs/phases/phase-05-pieds.md](docs/phases/phase-05-pieds.md) — à cadrer
-Grosse caisse et pédale de charleston au pied (webcam intégrée au sol, sinon pédales USB, décision au début de la phase) ; jaune fluo réservé au pied. Elle démarre par la séance de confirmation du pied et la décision d'achat de la caméra des mains ([ADR 0004](docs/adr/0004-camera-des-mains.md)).
+**Phase 05 — Vision : pieds (V3.2)** → [docs/phases/phase-05-pieds.md](docs/phases/phase-05-pieds.md)
+Cadrée le 2026-10-12 : grosse caisse (pied droit) et pédale de charleston (pied gauche), marqueurs jaune fluo, US8. Elle démarre par la PR 1 (jaune, calibration du pied, séance de confirmation que l'utilisateur mesure), puis un **point de décision** (ADR 0005) : branche (a) webcam intégrée au sol + caméra des mains à acheter, ou branche (c) pédales USB. Ne pas coder la suite avant ce choix.
 
 Phases terminées :
 - Phase 04 — Vision : deux mains, kit complet (V3.1) terminée le 2026-10-12, tag `v0.4.0` ; main gauche bleu fluo, main droite verte, quatre éléments côte à côte, US7 tenue dans 2 séances sur 3 à 90 BPM, pas d'achat de caméra pour l'instant (ADR 0004) → [docs/phases/phase-04-deux-mains.md](docs/phases/phase-04-deux-mains.md)
