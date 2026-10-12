@@ -48,15 +48,15 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 **PR 3 — Écran de calibration guidée** (`feat/vision-calibration`) — M11
 - [x] `input/vision/calibration.py` (logique pure) : repère les coups dans la trajectoire de l'embout, calcule la zone de chaque élément (rectangle avec marge, plan de frappe réglé sur la course réelle du geste), sépare deux zones voisines qui se chevauchent, et déroule la calibration élément par élément
 - [x] Écran dans l'application (entrée « Calibrer la caméra » à l'accueil) : aperçu miroir avec les zones au fur et à mesure, « Frappe : Caisse claire — coup 2 / 3 », liste des éléments faits, R pour recommencer un élément, validation par Entrée ; Échap abandonne sans rien écraser ; enregistre `zones.toml`
-- [ ] Les zones restent affichées sur l'aperçu pendant le jeu (voir si tu as bougé depuis la calibration) — fonction de dessin livrée ici (`ui/camera_view.py`), utilisée dans le jeu à la PR 4
+- [x] Les zones restent affichées sur l'aperçu pendant le jeu (voir si tu as bougé depuis la calibration) — fonction de dessin livrée ici (`ui/camera_view.py`), utilisée dans le jeu à la PR 4
 - [x] ADR 0003 : zones en rectangles, calibration guidée par des frappes (pas de dessin à la souris), `zones.toml` séparé
 - [ ] Nécessite ta webcam : calibrer tes 4 zones et vérifier qu'elles tiennent
 
 **PR 4 — Jouer à la caméra dans l'application** (`feat/vision-play`) — M9
-- [ ] `input/vision/source.py` : démarre le processus vision, lit sa file à chaque tour de boucle (≥ 500 Hz), transmet les `HitEvent` ; le son est joué **dès la lecture de l'événement**, jamais depuis le rendu (CLAUDE.md §9)
-- [ ] Entrée « Jeu caméra » à l'accueil : le kit s'illumine et sonne au rythme de tes coups ; état de la caméra visible (images/s) ; message clair si la caméra est absente, occupée, ou si aucune zone n'est calibrée
-- [ ] `config/settings.py` : section facultative `[camera]` (numéro de caméra, résolution, images/s demandées, MJPEG) ; l'application demande et affiche ce qu'elle obtient réellement. Les `settings.toml` existants restent valables tels quels
-- [ ] Tests : file simulée → sons joués, caméra perdue, pas de zones
+- [x] `input/vision/source.py` : démarre le processus vision, lit sa file à chaque tour de boucle (≥ 500 Hz), transmet les `HitEvent` ; le son est joué **dès la lecture de l'événement**, jamais depuis le rendu (CLAUDE.md §9)
+- [x] Entrée « Jeu caméra » à l'accueil : le kit s'illumine et sonne au rythme de tes coups ; état de la caméra visible (images/s) ; message clair si la caméra est absente, occupée, ou si aucune zone n'est calibrée
+- [x] `config/settings.py` : section facultative `[camera]` (numéro de caméra, résolution, images/s demandées, MJPEG) ; l'application demande et affiche ce qu'elle obtient réellement. Les `settings.toml` existants restent valables tels quels
+- [x] Tests : file simulée → sons joués, caméra perdue, pas de zones
 - [ ] Nécessite ta webcam : jouer librement, dire si le retard se sent
 - [ ] **Point de décision caméra** : ton ressenti, plus les images/s réelles, nourrissent la décision d'achat (ADR 0004)
 

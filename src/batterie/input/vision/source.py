@@ -3,8 +3,7 @@
 ``VisionFeed`` enveloppe le processus (``multiprocessing``) et sa file de ``VisionSample`` :
 l'application lit la file à chaque tour de boucle, sans jamais attendre (``poll`` ne
 bloque pas), et sait si la caméra est encore là (``is_alive``). Rien ici ne touche à
-pygame. L'écran de calibration s'en sert maintenant ; le jeu à la caméra (phase 04, PR 4)
-s'en servira pour les coups.
+pygame. L'écran de calibration et le jeu à la caméra s'en servent.
 """
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ import queue as queue_module
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from batterie.config.settings import CameraSettings
 from batterie.input.vision.process import MarkerSpec, VisionSample, run_markers_process
 
 QUEUE_SIZE = 64
@@ -39,19 +39,24 @@ class VisionFeed:
         *,
         mirror: bool = False,
         send_frames: bool = False,
+        camera: CameraSettings | None = None,
         target: Callable[..., None] = run_markers_process,
     ) -> VisionFeed:
         """Lance le processus vision (la caméra s'ouvre dedans, en une à deux secondes).
 
-        ``target`` remplace la boucle caméra par une autre de même signature
-        (``target(queue, specs, mirror=..., send_frames=...)``, définie au niveau du
-        module) : sert à vérifier l'application sans ouvrir de vraie caméra.
+        ``camera`` dit quelle caméra ouvrir et avec quels réglages. ``target`` remplace la
+        boucle caméra par une autre de même signature (``target(queue, specs, mirror=...,
+        send_frames=...)``, plus ``camera=...`` si fourni, définie au niveau du module) :
+        sert à vérifier l'application sans ouvrir de vraie caméra.
         """
+        kwargs: dict[str, Any] = {"mirror": mirror, "send_frames": send_frames}
+        if camera is not None:
+            kwargs["camera"] = camera
         sample_queue: mp.Queue = mp.Queue(maxsize=QUEUE_SIZE)
         process = mp.Process(
             target=target,
             args=(sample_queue, list(specs)),
-            kwargs={"mirror": mirror, "send_frames": send_frames},
+            kwargs=kwargs,
             daemon=True,
         )
         process.start()

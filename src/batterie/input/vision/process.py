@@ -17,12 +17,13 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import cv2
 import numpy as np
 
+from batterie.config.settings import CameraSettings
 from batterie.core.events import HitEvent, Source
 from batterie.input.vision.color_tracker import ColorRange, TrackedPoint, find_marker
 from batterie.input.vision.strike_detector import (
@@ -65,6 +66,16 @@ class MarkerSample:
 
 
 @dataclass(frozen=True)
+class CameraInfo:
+    """Ce que la caméra a réellement accordé (peut différer de ce qui était demandé)."""
+
+    width: int
+    height: int
+    fps: float  # cadence annoncée par le pilote ; les images/s réelles sont dans VisionSample
+    mjpeg: bool
+
+
+@dataclass(frozen=True)
 class VisionSample:
     """Un point de télémétrie (une entrée par image traitée), un ``MarkerSample`` par embout.
 
@@ -77,6 +88,7 @@ class VisionSample:
     fps: float
     processing_ms: float
     frame_preview: np.ndarray | None = field(default=None, compare=False)
+    camera: CameraInfo | None = None  # renseigné par le processus caméra, pas par les tests
 
     def _first(self) -> MarkerSample:
         return next(iter(self.markers.values()))
@@ -99,10 +111,38 @@ class VisionSample:
         return [m.hit_event for m in self.markers.values() if m.hit_event is not None]
 
 
-def camera_frames(device_index: int = 0) -> Iterator[np.ndarray]:
-    """Source d'images par défaut : ouvre la webcam ``device_index`` via OpenCV."""
-    capture = cv2.VideoCapture(device_index)
+_MJPEG_FOURCC = "MJPG"
+
+
+def camera_frames(
+    settings: CameraSettings | None = None,
+    on_open: Callable[[CameraInfo], None] | None = None,
+) -> Iterator[np.ndarray]:
+    """Source d'images par défaut : ouvre la webcam demandée par ``settings`` via OpenCV.
+
+    Sans ``settings``, la caméra 0 est ouverte telle quelle (outils de la phase 03).
+    ``on_open`` reçoit ce que la caméra a réellement accordé, une fois ouverte.
+    """
+    if settings is None:
+        capture = cv2.VideoCapture(0)
+    else:
+        capture = cv2.VideoCapture(settings.device_index)
+        if settings.mjpeg:
+            capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*_MJPEG_FOURCC))
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, settings.width)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, settings.height)
+        capture.set(cv2.CAP_PROP_FPS, settings.fps)
     try:
+        if on_open is not None and capture.isOpened():
+            fourcc = int(capture.get(cv2.CAP_PROP_FOURCC))
+            on_open(
+                CameraInfo(
+                    width=int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                    height=int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+                    fps=float(capture.get(cv2.CAP_PROP_FPS)),
+                    mjpeg=fourcc.to_bytes(4, "little").decode("latin-1") == _MJPEG_FOURCC,
+                )
+            )
         while True:
             ok, frame = capture.read()
             if not ok:
@@ -269,16 +309,20 @@ def run_markers_process(
     mirror: bool = False,
     send_frames: bool = False,
     frames: Iterator[np.ndarray] | None = None,
+    camera: CameraSettings | None = None,
 ) -> None:
     """Point d'entrée du processus : boucle et pousse les échantillons sur ``queue``.
 
     ``frames`` permet d'injecter une source d'images de test ; par défaut, ouvre la
-    webcam 0. ``queue`` n'a besoin que d'une méthode ``put`` (un vrai
-    ``multiprocessing.Queue``, ou un objet compatible dans les tests).
+    webcam demandée par ``camera`` (la 0 sans ``camera``), et chaque échantillon porte ce
+    que la caméra a réellement accordé (``VisionSample.camera``). ``queue`` n'a besoin que
+    d'une méthode ``put`` (un vrai ``multiprocessing.Queue``, ou un objet compatible dans
+    les tests).
     """
-    frame_iter = frames if frames is not None else camera_frames()
+    granted: list[CameraInfo] = []
+    frame_iter = frames if frames is not None else camera_frames(camera, on_open=granted.append)
     for sample in track_markers(frame_iter, specs, mirror=mirror, send_frames=send_frames):
-        queue.put(sample)
+        queue.put(replace(sample, camera=granted[0]) if granted else sample)
 
 
 def run_vision_process(

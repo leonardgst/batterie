@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pygame
 
+from batterie.config.settings import CameraSettings
 from batterie.config.zones import save_zones
 from batterie.core.elements import ELEMENTS_BY_ID
 from batterie.input.vision.calibration import CalibrationRun
@@ -72,9 +73,11 @@ class CalibrationScreen:
         self._small_font = pygame.font.SysFont("consolas", 16)
 
     @classmethod
-    def open(cls, *, zones_file: Path | None = None) -> CalibrationScreen:
+    def open(
+        cls, camera: CameraSettings | None = None, *, zones_file: Path | None = None
+    ) -> CalibrationScreen:
         """Ouvre l'écran avec la vraie caméra (les deux mains, image en miroir)."""
-        feed = VisionFeed.start(hand_specs(), mirror=HANDS_MIRROR, send_frames=True)
+        feed = VisionFeed.start(hand_specs(), mirror=HANDS_MIRROR, send_frames=True, camera=camera)
         return cls(feed, zones_file=zones_file)
 
     # --- Logique ----------------------------------------------------------
@@ -163,7 +166,7 @@ class CalibrationScreen:
             return
 
         if self.phase is Phase.ERROR:
-            for line in _wrap(self.error, 38):
+            for line in wrap_text(self.error, 38):
                 write(line, self._font, ERROR_COLOR)
             write("", self._font, DIM_COLOR)
             write("Entrée ou Échap : retour", self._small_font, DIM_COLOR)
@@ -180,7 +183,7 @@ class CalibrationScreen:
             write("", self._font, DIM_COLOR)
             write("Frappe toujours au même endroit,", self._small_font, TEXT_COLOR)
             write("comme si tu jouais cet élément.", self._small_font, TEXT_COLOR)
-            for line in _wrap(self.run.message, 44):
+            for line in wrap_text(self.run.message, 44):
                 write(line, self._small_font, ERROR_COLOR)
         elif self.phase is Phase.REVIEW:
             write("Zones calibrées", self._big_font, DONE_COLOR)
@@ -218,7 +221,7 @@ class CalibrationScreen:
         return ["Entrée ou Échap : retour"]
 
 
-def _wrap(text: str, width: int) -> list[str]:
+def wrap_text(text: str, width: int) -> list[str]:
     """Coupe ``text`` en lignes d'au plus ``width`` caractères, aux espaces."""
     lines: list[str] = []
     current = ""

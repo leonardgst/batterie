@@ -9,7 +9,7 @@ ou tes commentaires.
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 import tomli_w
@@ -29,16 +29,51 @@ def _default_key_map() -> dict[str, str]:
     return {element.id: element.default_scancode_name for element in ELEMENTS}
 
 
+@dataclass(frozen=True)
+class CameraSettings:
+    """Ce qu'on demande à la caméra (section facultative ``[camera]`` de ``settings.toml``).
+
+    La caméra n'est pas obligée d'accepter : l'application lit ce qu'elle a réellement
+    obtenu et l'affiche (``CameraInfo`` dans ``input/vision/process.py``).
+    """
+
+    device_index: int = 0
+    width: int = 640
+    height: int = 480
+    fps: int = 30
+    mjpeg: bool = False  # format compressé MJPEG : souvent nécessaire pour 60 images/s
+
+
 @dataclass
 class Settings:
-    """Touches personnalisées (id d'élément -> nom de scancode) et volume (0.0 à 1.0)."""
+    """Touches personnalisées (id d'élément -> nom de scancode), volume (0.0 à 1.0), caméra."""
 
     key_map: dict[str, str] = field(default_factory=_default_key_map)
     volume: float = 1.0
+    camera: CameraSettings = field(default_factory=CameraSettings)
 
 
 def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, value))
+
+
+def _camera_from_data(data: dict) -> CameraSettings:
+    """Lit la section ``[camera]`` ; une valeur absente ou invalide garde sa valeur par défaut."""
+    default = CameraSettings()
+
+    def positive_int(name: str, fallback: int, minimum: int) -> int:
+        value = data.get(name, fallback)
+        if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+            return fallback
+        return value
+
+    return CameraSettings(
+        device_index=positive_int("device_index", default.device_index, 0),
+        width=positive_int("width", default.width, 1),
+        height=positive_int("height", default.height, 1),
+        fps=positive_int("fps", default.fps, 1),
+        mjpeg=bool(data.get("mjpeg", default.mjpeg)),
+    )
 
 
 def _render_default_template() -> str:
@@ -60,7 +95,18 @@ def _render_default_template() -> str:
     for element in ELEMENTS:
         assignment = f'{element.id:<{width}} = "{element.default_scancode_name}"'
         lines.append(f"{assignment}  # {element.key_label}")
-    lines.append("")
+    lines += [
+        "",
+        "# Caméra (jeu à la caméra) : facultatif, enlève les # pour changer une valeur.",
+        "# La caméra n'accepte pas toujours : l'application affiche ce qu'elle obtient.",
+        "# [camera]",
+        "# device_index = 0   # numéro de la caméra (0 = la première)",
+        "# width = 640",
+        "# height = 480",
+        "# fps = 30           # images par seconde demandées",
+        "# mjpeg = false      # true : format MJPEG, souvent nécessaire pour 60 images/s",
+        "",
+    ]
     return "\n".join(lines)
 
 
@@ -81,13 +127,14 @@ def load_settings(path: Path | None = None) -> Settings:
 
     key_map = {**_default_key_map(), **data.get("keys", {})}
     volume = _clamp01(float(data.get("volume", 1.0)))
-    return Settings(key_map=key_map, volume=volume)
+    camera = _camera_from_data(data.get("camera", {}))
+    return Settings(key_map=key_map, volume=volume, camera=camera)
 
 
 def save_settings(settings: Settings, path: Path | None = None) -> None:
     """Écrit ``settings`` dans ``path`` (ou le chemin par défaut), sans commentaires."""
     target = path if path is not None else settings_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    data = {"volume": settings.volume, "keys": settings.key_map}
+    data = {"volume": settings.volume, "keys": settings.key_map, "camera": asdict(settings.camera)}
     with target.open("wb") as handle:
         tomli_w.dump(data, handle)
