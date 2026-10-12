@@ -114,6 +114,14 @@ Les deux outils suivent par défaut la baguette (`--target stick`, caisse claire
 posée au sol ; ce préréglage n'est pas calibré. `--target hands` suit les deux mains
 (embout bleu fluo à gauche, vert à droite, image en miroir) : phase 04, aussi non calibré.
 Pour voir le déroulé sans caméra : `uv run python tools/vision_measure.py --simulate`.
+
+### Séance de mesure à deux mains (US7)
+
+`uv run python tools/vision_measure.py --pattern` : 100 croches à 90 BPM, un motif de 8 croches sur
+la charleston fermée, la caisse claire, le tom médium et le ride, les deux mains en alternance.
+Elle utilise tes zones calibrées et chiffre les quatre critères US7 (coups détectés, faux
+coups, coups sur le bon élément, latence geste → son, avec une séance clavier de référence).
+Protocole complet dans la [page de la phase 04](docs/phases/phase-04-deux-mains.md#protocole-de-mesure-us7).
 Protocoles : [baguette](docs/phases/phase-03-vision-poc.md#protocole-de-mesure) et
 [pied](docs/phases/phase-03-vision-poc.md#protocole-de-mesure--pied-test-anticipé-de-la-phase-05).
 

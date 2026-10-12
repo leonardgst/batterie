@@ -61,9 +61,9 @@ Comme en phase 03, je code et teste toute la logique (suivi, zones, anti-double-
 - [ ] **Point de décision caméra** : ton ressenti, plus les images/s réelles, nourrissent la décision d'achat (ADR 0004)
 
 **PR 5 — Protocole et outil de mesure US7** (`feat/vision-us7`)
-- [ ] `input/vision/measure.py` : séance où chaque clic a un élément attendu ; calcule coups détectés, faux coups et **attribution** (bon élément ou non), en plus des latences existantes ; tests sur des séries synthétiques
-- [ ] `tools/vision_measure.py --pattern` : 100 croches à 90 BPM, motif de 8 croches répété sur les 4 éléments, mains en alternance ; décompte et métronome audibles, résultat à la fin. Sans son sur tes coups (comme en phase 03, sinon tu cales ton geste sur le son et le retard disparaît de la mesure) ; la latence geste → son s'obtient en ajoutant les ≈ 5 ms du moteur audio (ADR 0001)
-- [ ] Protocole consigné dans cette page
+- [x] `input/vision/measure.py` : séance où chaque clic a un élément attendu ; calcule coups détectés, faux coups et **attribution** (bon élément ou non), en plus des latences existantes ; tests sur des séries synthétiques
+- [x] `tools/vision_measure.py --pattern` : 100 croches à 90 BPM, motif de 8 croches répété sur les 4 éléments, mains en alternance ; décompte et métronome audibles, résultat à la fin. Sans son sur tes coups (comme en phase 03, sinon tu cales ton geste sur le son et le retard disparaît de la mesure) ; la latence geste → son s'obtient en ajoutant les ≈ 5 ms du moteur audio (ADR 0001)
+- [x] Protocole consigné dans cette page (section « Protocole de mesure US7 » ci-dessous)
 - [ ] Nécessite ta webcam : séances de 100 coups, chiffres relevés
 
 **PR 6 — Nuance : la vitesse du geste règle le volume** (`feat/vision-velocity`) — S7, *Should*
@@ -94,6 +94,46 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 - [ ] Zones calibrables depuis l'application (M11)
 - [ ] Décision d'achat (ou non) d'une caméra consignée dans l'ADR 0004
 
+## Protocole de mesure US7
+
+Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la caisse claire, le tom médium et le ride, **deux mains**. Un outil fait tout le comptage ; tu n'as qu'à jouer et à me rapporter le texte affiché.
+
+**Avant de commencer**
+- Zones calibrées avec tes vraies baguettes, à ta place de jeu (« Calibrer la caméra » dans l'application) ; si tu as bougé depuis, recalibre. Sans zones, l'outil refuse de démarrer et le dit.
+- Embouts réglés : le point bleu (main gauche) et le point vert (main droite) suivent bien tes embouts (`uv run python tools/vision_debug.py --target hands`).
+- Lumière **constante** pendant toute la mesure (même éclairage pour la référence et les 3 séances). Casque ou enceintes **filaires** (jamais de Bluetooth).
+- Réglages caméra : ceux de ta section `[camera]` de `settings.toml` (par défaut 640×480 à 30 images/s) ; l'outil écrit à la fin ce que la caméra a réellement accordé. Note ce qu'il affiche.
+- Aucun son n'est joué sur tes coups, exprès (comme en phase 03) : tu te calerais dessus et le retard disparaîtrait de la mesure.
+
+**Déroulé** : `uv run python tools/vision_measure.py --pattern`
+1. **Référence clavier** (touche K) : 8 clics aigus de décompte (une mesure de croches), puis un appui sur la **barre d'espace** à chacun des 100 clics graves. Elle donne ton écart naturel par rapport au clic.
+2. **Trois séances caméra** (touche V, une par essai, entrée pour démarrer) : même décompte, puis un coup de baguette sur chaque clic grave, **sur l'élément et avec la main indiqués** par la case en surbrillance. Le premier clic de chaque motif est plus aigu pour te repérer.
+3. À la fin de chaque séance, le résultat s'affiche à l'écran et dans le terminal ; **copie le texte du terminal** (les trois séances et la référence) et envoie-le-moi. Si une séance est ratée (tu t'es perdu, le marqueur a quitté l'image), refais-la plutôt que de la garder.
+
+**Le motif** (8 croches, répété, 100 clics au total ; la main gauche joue les positions 1, 3, 5, 7, la droite les positions 2, 4, 6, 8) :
+
+| Position | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Main | G | D | G | D | G | D | G | D |
+| Élément | Charleston | Caisse claire | Caisse claire | Tom médium | Charleston | Ride | Caisse claire | Tom médium |
+
+**Lecture des quatre critères** (affichés par l'outil, avec « atteint » / « NON ATTEINT ») :
+
+| Critère | Exigé | Comment l'outil le calcule |
+| --- | --- | --- |
+| Coups détectés | ≥ 95 % | clics touchés par au moins un coup, dans une fenêtre d'une demi-croche (≈ 167 ms) de part et d'autre du clic |
+| Faux coups | ≤ 2 % | détections en trop (un clic ne garde que son coup le plus proche), en part des 100 clics |
+| Attribués au bon élément | ≥ 95 % | parmi les coups détectés, ceux dont l'élément est celui du motif ; les confusions sont listées (« attendu Caisse claire, obtenu Tom médium : 3 ») |
+| Latence geste → son | ≤ 60 ms | (écart médian coup − clic de la séance caméra) − (celui de la référence clavier) + 5 ms de moteur audio (ADR 0001) |
+
+**Ce que la mesure ne dit pas** (à garder en tête en lisant les chiffres)
+- Un coup parasite tombé dans la fenêtre d'un clic **raté** compte comme la détection de ce clic : il peut masquer un raté (visible alors dans les confusions s'il tombe sur un autre élément). Les coups pendant le décompte ou après la fin sont ignorés.
+- La latence suppose que ton geste de baguette et ton appui sur la barre d'espace anticipent le clic de la même façon ; ce n'est pas exact (la baguette est plus lente à arrêter), d'où un chiffre indicatif, à lire avec les trois séances (écart-type et variation d'une séance à l'autre).
+- Le retard interne de la caméra (exposition, transfert) est inclus dans la latence puisque le clavier n'en a pas ; il n'est pas séparé du reste.
+- Une seule personne, une pièce, une lumière : c'est un test d'acceptation, pas une statistique.
+
+**Sans caméra** : `uv run python tools/vision_measure.py --pattern --simulate` joue la séance avec deux mains fictives et des zones fictives, pour voir le déroulé et le format du résultat ; elle ne mesure rien de ta caméra.
+
 ## Décisions prises (liens vers les ADR)
 
 - [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) (héritée de la phase 03)
@@ -102,6 +142,10 @@ Charleston ouverte/fermée selon une pédale, grosse caisse et pédale de charle
 
 ## Écarts par rapport au plan
 
+- **PR 5 — « 90 BPM en croches » : un clic toutes les 1/3 s.** `SessionPlan` gagne `clicks_per_beat` (2 pour des croches) pour que « BPM » garde son sens de temps ; le décompte est d'une mesure de croches (8 clics) au lieu de 4 clics. Non prévu au plan, nécessaire pour que le motif de 8 croches tienne dans une mesure.
+- **PR 5 — le premier clic de chaque motif est plus aigu.** Non prévu au plan : sans repère, il est facile de perdre le début du motif de 8 croches sans regarder l'écran.
+- **PR 5 — l'attribution se compte sur les coups détectés.** Un clic raté fait baisser « coups détectés », pas « attribués au bon élément » : chaque critère mesure un défaut différent, sans compter deux fois le même raté.
+- **PR 5 — l'API de `tools/vision_measure.py` change :** `parse_arguments` renvoie un objet `Options` (cible, simulation, séance US7) au lieu d'un couple ; les tests existants sont adaptés.
 - **PR 3 — le flux caméra de l'application arrive ici, pas en PR 4.** L'écran de calibration a besoin de lancer le processus vision et de lire ses images : `input/vision/source.py` (`VisionFeed`) est créé dans cette PR, la PR 4 le complètera pour le jeu. De même `input/vision/hands.py` : une seule définition des deux mains (orange, verte, miroir) pour l'application et pour `tools/vision_debug.py`, avec un test qui vérifie qu'ils ne divergent pas.
 - **PR 3 — l'élément à frapper est annoncé dans la colonne de droite, pas en surbrillance sur le kit.** « Frappe : Caisse claire », avec la liste des quatre éléments cochés au fur et à mesure et les zones déjà calibrées tracées sur l'aperçu ; le dessin du kit n'est pas affiché pendant la calibration.
 - **PR 3 — l'affichage des zones pendant le jeu passe en PR 4.** Le jeu à la caméra n'existe pas encore ; la fonction de dessin des zones est prête et déjà utilisée par l'écran de calibration.

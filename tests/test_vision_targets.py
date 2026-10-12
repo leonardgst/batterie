@@ -44,17 +44,18 @@ def _count_hits(detector: StrikeDetector, trajectory) -> int:
 
 def test_stick_is_the_default_target():
     assert vision_debug.parse_arguments([]) is vision_debug.STICK
-    target, simulate = vision_measure.parse_arguments([])
-    assert target is vision_debug.STICK
-    assert simulate is False
+    options = vision_measure.parse_arguments([])
+    assert options.target is vision_debug.STICK
+    assert options.simulate is False
+    assert options.pattern is False
 
 
 def test_target_argument_selects_the_preset_in_both_tools():
     assert vision_debug.parse_arguments(["--target", "foot"]) is vision_debug.FOOT
     assert vision_debug.parse_arguments(["--target", "stick"]) is vision_debug.STICK
-    target, simulate = vision_measure.parse_arguments(["--target", "foot", "--simulate"])
-    assert target is vision_debug.FOOT
-    assert simulate is True
+    options = vision_measure.parse_arguments(["--target", "foot", "--simulate"])
+    assert options.target is vision_debug.FOOT
+    assert options.simulate is True
 
 
 def test_unknown_target_is_rejected():
@@ -151,8 +152,7 @@ def test_only_the_hands_target_is_mirrored():
 
 def test_hands_target_is_selected_in_both_tools():
     assert vision_debug.parse_arguments(["--target", "hands"]) is vision_debug.HANDS
-    target, _ = vision_measure.parse_arguments(["--target", "hands"])
-    assert target is vision_debug.HANDS
+    assert vision_measure.parse_arguments(["--target", "hands"]).target is vision_debug.HANDS
 
 
 def test_marker_presets_become_process_specs_with_their_own_thresholds():
