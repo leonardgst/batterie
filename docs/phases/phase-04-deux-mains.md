@@ -2,7 +2,7 @@
 
 | Statut | Prévue | Terminée le | Tag Git |
 | --- | --- | --- | --- |
-| Terminée (2026-10-12) | 6 à 10 h de ton temps | 2026-10-12 | v0.4.0 (à poser sur `main` après fusion de la PR de clôture) |
+| Terminée (2026-10-12) | 6 à 10 h de ton temps | 2026-10-12 | v0.4.0 (posé sur `main` le 2026-10-12, après la fusion de la PR 31) |
 
 ## Objectif
 
@@ -151,7 +151,7 @@ Mesure le critère US7 : **100 croches à 90 BPM** sur la charleston fermée, la
 
 - [ADR 0002 — Vision : go/no-go et choix de caméra](../adr/0002-vision-go-no-go-et-camera.md) (héritée de la phase 03)
 - [ADR 0003 — Zones de frappe et calibration par frappes guidées](../adr/0003-zones-et-calibration.md) — accepté (confirmé par ton essai)
-- [ADR 0004 — Caméra des mains : acheter une webcam 60 images/s ou garder la webcam intégrée](../adr/0004-camera-des-mains.md) — proposé : **ne rien acheter maintenant, décider au début de la phase 05**
+- [ADR 0004 — Caméra des mains : acheter une webcam 60 images/s ou garder la webcam intégrée](../adr/0004-camera-des-mains.md) — accepté : **ne rien acheter maintenant, décider au début de la phase 05**
 
 ## Écarts par rapport au plan
 
