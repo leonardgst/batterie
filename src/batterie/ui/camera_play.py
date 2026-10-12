@@ -193,7 +193,7 @@ class CameraPlayScreen:
             write(f"{sample.fps:.1f} images/s", self._big_font, ACCENT_COLOR)
             write(f"traitement {sample.processing_ms:.1f} ms par image", self._font, TEXT_COLOR)
             if self.camera is not None:
-                write(self._camera_line(self.camera), self._font, TEXT_COLOR)
+                write(f"caméra : {self.camera.describe()}", self._font, TEXT_COLOR)
             write(f"coups : {self.hits}", self._font, TEXT_COLOR)
             for name, label in (("left", "gauche (bleue)"), ("right", "droite (verte)")):
                 if name in sample.markers and sample.markers[name].point is None:
@@ -204,8 +204,3 @@ class CameraPlayScreen:
             write(line, self._small_font, DIM_COLOR)
         write("Si tu as bougé, recalibre depuis l'accueil.", self._small_font, DIM_COLOR)
         write("Échap : retour à l'accueil", self._small_font, DIM_COLOR)
-
-    @staticmethod
-    def _camera_line(info: CameraInfo) -> str:
-        fmt = "MJPEG" if info.mjpeg else "format par défaut"
-        return f"caméra : {info.width}×{info.height}, {info.fps:.0f} i/s annoncées, {fmt}"

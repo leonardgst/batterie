@@ -74,6 +74,11 @@ class CameraInfo:
     fps: float  # cadence annoncée par le pilote ; les images/s réelles sont dans VisionSample
     mjpeg: bool
 
+    def describe(self) -> str:
+        """Résumé lisible : « 640×480, 30 i/s annoncées, MJPEG »."""
+        fmt = "MJPEG" if self.mjpeg else "format par défaut"
+        return f"{self.width}×{self.height}, {self.fps:.0f} i/s annoncées, {fmt}"
+
 
 @dataclass(frozen=True)
 class VisionSample:
