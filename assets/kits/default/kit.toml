@@ -18,7 +18,7 @@ ride = ["ride.wav"]
 [gains]
 kick = 1.0
 hihat_pedal = 0.8
-hihat_closed = 0.9
+hihat_closed = 1.0
 hihat_open = 0.9
 snare = 1.0
 tom_high = 0.95

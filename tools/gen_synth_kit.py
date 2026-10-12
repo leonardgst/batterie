@@ -88,8 +88,12 @@ def _snare(seed: int) -> Samples:
 
 
 def _hihat_closed(seed: int) -> Samples:
-    noise = _apply_envelope(_brighten(_white_noise(0.05, seed=seed)), tau_s=0.012)
-    return _normalize(noise)
+    # Bruit net (différencié) plus du bruit non filtré pour le corps, et assez long (0,12 s) :
+    # un « tic » de 50 ms à la même crête s'entend nettement plus faible que les autres sons,
+    # que l'oreille intègre sur une durée plus longue.
+    bright = _apply_envelope(_brighten(_white_noise(0.12, seed=seed)), tau_s=0.03)
+    body = _apply_envelope(_white_noise(0.12, seed=seed + 100), tau_s=0.03)
+    return _normalize(_mix(bright, [s * 2.0 for s in body]))
 
 
 def _hihat_open(seed: int) -> Samples:
@@ -157,7 +161,7 @@ ride = ["ride.wav"]
 [gains]
 kick = 1.0
 hihat_pedal = 0.8
-hihat_closed = 0.9
+hihat_closed = 1.0
 hihat_open = 0.9
 snare = 1.0
 tom_high = 0.95
